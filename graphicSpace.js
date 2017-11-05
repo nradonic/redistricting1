@@ -1,4 +1,4 @@
-function GraphicSpace(GridSize, ColorSpace){
+function GraphicSpace(GridSize, ColorSpace) {
 
     this.gridSize = GridSize;
     this.colorSpace = ColorSpace;
@@ -10,14 +10,29 @@ function GraphicSpace(GridSize, ColorSpace){
 
     var COLORSCALE = 255;
 
-    var colorSpace = 0;
-
 //unique color area objects [{r,g,b}]
     function ColorZone(red, green, blue) {
         this.red = red;
         this.green = green;
         this.blue = blue;
     }
+
+    //this.centroidPositions = []
+    var centroidPositions = [];
+
+    this.clearCentroidPositions = function () {
+        centroidPositions = [];
+    }
+    this.pushCentroidPositions = function (x, y) {
+        centroidPositions.push({X: x, Y: y});
+    }
+
+    this.centroid = function (x, y) {
+        this.x = x;
+        this.y = y;
+        return {X: x, Y: y};
+    }
+
 
     /**
      * Generate scaled color numbers - uses external color
@@ -34,9 +49,9 @@ function GraphicSpace(GridSize, ColorSpace){
     function fillColorZones(colorSpace) {
         this.colorSpace = colorSpace;
         var colorZones = [];
-        for (var r = 0; r < colorSpace; r++) {
+        for (var b = 0; b < colorSpace; b++) {
             for (var g = 0; g < colorSpace; g++) {
-                for (var b = 0; b < colorSpace; b++) {
+                for (var r = 0; r < colorSpace; r++) {
                     colorZones.push(new ColorZone(scaleColor(r, colorSpace), scaleColor(g, colorSpace), scaleColor(b, colorSpace)));
                 }
             }
@@ -49,7 +64,9 @@ function GraphicSpace(GridSize, ColorSpace){
     var colorZones = fillColorZones(ColorSpace);
 
     // external fetch of colorZones array
-    this.getColorZones = function(){ return colorZones;}
+    this.getColorZones = function () {
+        return colorZones;
+    }
 
 
     /**
@@ -67,7 +84,7 @@ function GraphicSpace(GridSize, ColorSpace){
      * @param dG data array
      * @param gs2 size of array
      */
-     fillDataGrid: function fillDataGrid(gridSize1){
+    fillDataGrid: function fillDataGrid(gridSize1) {
         gridSize = gridSize1;
         gridSize2 = gridSize1 * gridSize1;
         for (var i = 0; i < gridSize2; i++) {
@@ -77,18 +94,15 @@ function GraphicSpace(GridSize, ColorSpace){
 
     fillDataGrid(gridSize);
 
-
-     // get data object
-    this.getGridObject= function(){ return {gridSize: gridSize, dataGrid: dataGrid, colorSpace:colorSpace, colorZones: colorZones};}
-
     // external get gridSize
-    this.getGridSize = function(){ return gridSize;}
+    this.getGridSize = function () {
+        return gridSize;
+    }
 
     // external get dataGrid
-    this.getDataGrid = function(){ return dataGrid;}
-
-
-    var avgPosn = {x:0, y:0};
+    this.getDataGrid = function () {
+        return dataGrid;
+    }
 
     // extension to Array type for 2D, with initialization - from Douglas Crockford
     Array.matrix = function (numrows, numcols, initial) {
@@ -103,66 +117,33 @@ function GraphicSpace(GridSize, ColorSpace){
         return arr;
     };
 
-    function rand1() {
-        return Math.floor(Math.random() * ColorSpace) * ColorScale;
-    }
-
-
-
-    // calculate a +/- range variable
-    function randPMFr() {
-        var a = Math.floor(Math.random() * (2 * forceRange + 1) - forceRange);
-        return a;
-    }
-
-    function randPZM1() {   // returns -1, 0, +1
-        var a = Math.floor(Math.random() * 3 - 1);
-        return a;
-    }
-
-    function randX(x) {
-        return Math.floor(Math.random() * x);
-    }
-
-    function gridCell(rc, gc, bc) {
-        this.r = rc;
-        this.g = gc;
-        this.b = bc;
-        // keep indexes of colorZones....
-        this.colorZoneIndex = randX(colorZones.size);
-    }
-
-    // distanceGrid stores distance coefficients
-    //var distanceGrid = Array.matrix(gridSize, gridSize, 0);
-
-    function fillDistanceGrid() {
-        for (var i = 0; i < gridSize; i++) {
-            for (var j = 0; j < gridSize; j++) {
-                distanceGrid[i][j] = {dist: Math.sqrt(i * i + j * j), dist2: (i * i + j * j)};
-            }
-        }
-        distanceGrid[0][0].dist = 1000;
-        distanceGrid[0][0].dist2 = 1000000;
-    }
-
-
-// fill FFT grid with zeros in RGB elements
-    function zeroFFTGrid(fG, gS2) {
-        for (var i = 0; i < gS2; i++) {
-            fG[i] = new gridCell(0, 0, 0);
-        }
-    }
-
 // draw data
-    this.drawData = function() {
+    this.drawData = function () {
         document.getElementById("screenDraw").innerHTML = screenDraw.toFixed(0);
         document.getElementById("changes").innerHTML = changes.toFixed(0);
         document.getElementById("totalChanges").innerHTML = totalChanges.toFixed(0);
         document.getElementById("noiseLevel").innerHTML = noiseLevel.toFixed(0);
     }
 
+    var drawCentroids = function (ctx, squareSide) {
+        for (var i = 0; i < centroidPositions.length; i++) {
+            var cp = centroidPositions[i];
+            cp.X = (cp.X) * squareSide;
+            cp.Y = (cp.Y) * squareSide;
+            var t = 'rgba(' + 0 + ',' + 0 + ',' + 0 + ',255)';
+            ctx.strokeStyle = t;
+            if (squareSide > 10) {
+                ctx.lineWidth = 5;
+            } else {
+                ctx.lineWidth = 1;
+            }
+            ctx.strokeRect(cp.X, cp.Y, squareSide, squareSide);
+        }
+    }
+
+
 // draw raw graphics pattern
-    this.drawCanvas1 = function() {
+    this.drawCanvas1 = function () {
         var c = document.getElementById("drawHere");
         var ctx = c.getContext("2d");
         var myScreen = 800;
@@ -179,78 +160,9 @@ function GraphicSpace(GridSize, ColorSpace){
             ctx.fillStyle = t;
             ctx.fillRect(x, y, squareSide, squareSide);
         }
+        drawCentroids(ctx, squareSide);
         ctx.stroke();
     }
-
-// draw raw graphics pattern
-    function drawFFTCanvas() {
-        var c = document.getElementById("drawFFT2D");
-        var ctx = c.getContext("2d");
-        var myScreen = 800;
-        ctx.beginPath();
-        var squareSide = myScreen / gridSize;
-        for (var i = 0; i < gridSize2; i++) {
-            var squareRow = Math.floor(i / gridSize);
-            var squareCol = Math.floor(i % gridSize);
-
-            var y = squareRow * squareSide;
-            var x = squareCol * squareSide;
-            var t = '';
-            switch (fftLayer) {
-                case "All":
-                    t = 'rgba(' + fftGrid[i].r + ',' + fftGrid[i].g + ',' + fftGrid[i].b + ',255)';
-                    break;
-                case "Red":
-                    t = 'rgba(' + fftGrid[i].r + ',' + 0 + ',' + 0 + ',255)';
-                    break;
-                case "Green":
-                    t = 'rgba(' + 0 + ',' + fftGrid[i].g + ',' + 0 + ',255)';
-                    break;
-                case "Blue":
-                    t = 'rgba(' + 0 + ',' + 0 + ',' + fftGrid[i].b + ',255)';
-                    break;
-
-                default:
-                    t = 'rgba(' + fftGrid[i].r + ',' + fftGrid[i].g + ',' + fftGrid[i].b + ',255)';
-                    break;
-            }
-            ctx.fillStyle = t;
-            ctx.fillRect(x, y, squareSide, squareSide);
-        }
-        ctx.stroke();
-    }
-
-    function drawCanvas2(iIndex1, jIndex1, iIndex2, jIndex2) {
-        var c = document.getElementById("drawHere");
-        var ctx = c.getContext("2d");
-        var myScreen = 800;
-        ctx.beginPath();
-        var squareSide = myScreen / gridSize;
-
-        var i = iIndex1 * gridSize + jIndex1;
-        var y = iIndex1 * squareSide;
-        var x = jIndex1 * squareSide;
-
-
-        var t = 'rgba(' + dataGrid[i].r + ',' + dataGrid[i].g + ',' + dataGrid[i].b + ',255)';
-        ctx.fillStyle = t;
-        ctx.fillRect(x, y, squareSide, squareSide);
-
-        var j = iIndex2 * gridSize + jIndex2;
-        var y2 = iIndex2 * squareSide;
-        var x2 = jIndex2 * squareSide;
-        t = 'rgba(' + dataGrid[j].r + ',' + dataGrid[j].g + ',' + dataGrid[j].b + ',255)';
-        ctx.fillStyle = t;
-        ctx.fillRect(x, y, squareSide, squareSide);
-
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.rect(x, y, squareSide, squareSide);
-        ctx.rect(x2, y2, squareSide, squareSide);
-
-        ctx.stroke();
-    }
-
 
     function diffSQ0(ST1, ST2) {
         if (dataGrid[ST1].r === dataGrid[ST2].r &&
@@ -386,253 +298,33 @@ function GraphicSpace(GridSize, ColorSpace){
         return force1 + force2 - force1At2 - force2At1;
     }
 
-// Test swaps with all nearest neighbors
-    function testCellNeighborsOverGrid(i1, j1) {
-        var eta = 1;
-
-        // force plus 1 row plus one column
-        function fPP(i1, j1, force1At1) {
-            if (i1 + 1 < gridSize && j1 + 1 < gridSize) {
-                return fitColorAll(i1, j1, i1 + 1, j1 + 1, force1At1);
-            } else {
-                return 0;
-            }
-        }
-
-        // force plus 1 row minus one column
-        function fPN(i1, j1, force1At1) {
-            if (i1 + 1 < gridSize && j1 - 1 >= 0) {
-                return fitColorAll(i1, j1, i1 + 1, j1 - 1, force1At1);
-            } else {
-                return 0;
-            }
-        }
-
-        // force plus 1 row same column
-        function fPZ(i1, j1, force1At1) {
-            if (i1 + 1 < gridSize) {
-                return fitColorAll(i1, j1, i1 + 1, j1, force1At1);
-            } else {
-                return 0;
-            }
-        }
-
-        // force minus 1 row plus one column
-        function fNP(i1, j1, force1At1) {
-            if (i1 - 1 >= 0 && j1 + 1 < gridSize) {
-                return fitColorAll(i1, j1, i1 - 1, j1 + 1, force1At1);
-            } else {
-                return 0;
-            }
-        }
-
-        // force minus 1 row minus one column
-        function fNN(i1, j1, force1At1) {
-            if (i1 - 1 >= 0 && j1 - 1 >= 0) {
-                return fitColorAll(i1, j1, i1 - 1, j1 - 1, force1At1);
-            } else {
-                return 0;
-            }
-        }
-
-        // force minus 1 row same column
-        function fNZ(i1, j1, force1At1) {
-            if (i1 - 1 >= 0) {
-                return fitColorAll(i1, j1, i1 - 1, j1, force1At1);
-            } else {
-                return 0;
-            }
-        }
-
-        // force same 1 row minus one column
-        function fZN(i1, j1, force1At1) {
-            if (j1 - 1 >= 0) {
-                return fitColorAll(i1, j1, i1, j1 - 1, force1At1);
-            } else {
-                return 0;
-            }
-        }
-
-        // force same row plus one column
-        function fZP(i1, j1, force1At1) {
-            if (j1 + 1 < gridSize) {
-                return fitColorAll(i1, j1, i1, j1 + 1, force1At1);
-            } else {
-                return 0;
-            }
-        }
-
-        var force1At1 = forceAtGridPoint(i1, j1);
-        // as the 'force' increases there is more advantage to swapping...
-        var maxForce = 1;  // minimum noise margin
-        var minVect = "ZZ";
-        var ffPP = fPP(i1, j1, force1At1);
-        if (ffPP > maxForce) {
-            maxForce = ffPP;
-            minVect = "PP";
-        }
-        var ffPN = fPN(i1, j1, force1At1);
-        if (ffPN > maxForce) {
-            maxForce = ffPN;
-            minVect = "PN";
-        }
-        var ffPZ = fPZ(i1, j1, force1At1);
-        if (ffPZ > maxForce) {
-            maxForce = ffPZ;
-            minVect = "PZ";
-        }
-        var ffNN = fNN(i1, j1, force1At1);
-        if (ffNN > maxForce) {
-            maxForce = ffNN;
-            minVect = "NN";
-        }
-        var ffNP = fNP(i1, j1, force1At1);
-        if (ffNP > maxForce) {
-            maxForce = ffNP;
-            minVect = "NP";
-        }
-        var ffNZ = fNZ(i1, j1, force1At1);
-        if (ffNZ > maxForce) {
-            maxForce = ffNZ;
-            minVect = "NZ";
-        }
-        var ffZP = fZP(i1, j1, force1At1);
-        if (ffZP > maxForce) {
-            maxForce = ffZP;
-            minVect = "ZP";
-        }
-        var ffZN = fZN(i1, j1, force1At1);
-        if (ffZN > maxForce) {
-            maxForce = ffZN;
-            minVect = "ZN";
-        }
-
-        if (minVect !== "ZZ") {
-            var lchanges = changes;
-            changes++;
-            if (maxForce < 0) {
-                var m = maxForce;
-            }
-            noiseLevel += maxForce;
-        }
-
-        switch (minVect) {
-            case "PP":
-                trade(i1, j1, i1 + 1, j1 + 1);
-                break;
-            case "PN":
-                trade(i1, j1, i1 + 1, j1 - 1);
-                break;
-            case "PZ":
-                trade(i1, j1, i1 + 1, j1);
-                break;
-            case "NN":
-                trade(i1, j1, i1 - 1, j1 - 1);
-                break;
-            case "NP":
-                trade(i1, j1, i1 - 1, j1 + 1);
-                break;
-            case "NZ":
-                trade(i1, j1, i1 - 1, j1);
-                break;
-            case "ZP":
-                trade(i1, j1, i1, j1 + 1);
-                break;
-            case "ZN":
-                trade(i1, j1, i1, j1 - 1);
-                break;
-            default: {
-                break;
-            }
-        }
-    }
-
-// scan for swap over entire grid space with vector force measurements
-    function vectorSwap() {
-        changes = 0;
-        noiseLevel = 0;
-        var eta = 1;
-
-        for (var i = 0; i < gridSize2; i++) {
-            var i1 = iToY(i, gridSize);
-            var j1 = iToX(i, gridSize);
-            lchanges = changes;
-            testCellNeighborsOverGrid(i1, j1);
-        }
-        // Annealing - random cell swaps....
-        var gSM1 = gridSize - 1;
-        for (var i = 0; i < gridSize; i++) {
-            var i1 = randGS(gridSize);   // i,j +/- foreceRange....
-            var j1 = randGS(gridSize);
-            var force1At1 = forceAtGridPoint(i1, j1);
-            var i2 = Math.min(gSM1, Math.max(0, i1 + randPMFr()));
-            var j2 = Math.min(gSM1, Math.max(0, j1 + randPMFr()));
-            var force2At2 = forceAtGridPoint(i2, j2);
-            trade(i1, j1, i2, j2);
-            var force1At2 = forceAtGridPoint(i2, j2);
-            var force2At1 = forceAtGridPoint(i1, j1);
-            var resetTrade = force1At1 + force2At2 + eta - force1At2 - force2At1;
-            if (resetTrade < 0) {
-                trade(i1, j1, i2, j2);  // reset if no gain in trades...
-            } else {
-                lchanges = changes;
-                changes++;
-                noiseLevel += resetTrade;
-            }
-        }
-        lchanges = changes;
-        totalChanges += changes;
-    }
-
-    // var cellColors = {
-    //     colors: [],
-    //     findOrAddColor: function (cellColor, cell, i, j) {
-    //         var found = false;
-    //         this.colors.forEach(function (element) {
-    //             if (element.r === cellColor.r && element.g === cellColor.g && element.b === cellColor.b) {
-    //                 found = true;
-    //             }
-    //         })
-    //         if (!found) {
-    //             this.colors.push(cellColor);
-    //         }
-    //     }
-    // };
-    //
-    // var steps = [1, -1, gridSize, -gridSize];
-    //
-    // var colorCenters = [];
+// var cellColors = {
+//     colors: [],
+//     findOrAddColor: function (cellColor, cell, i, j) {
+//         var found = false;
+//         this.colors.forEach(function (element) {
+//             if (element.r === cellColor.r && element.g === cellColor.g && element.b === cellColor.b) {
+//                 found = true;
+//             }
+//         })
+//         if (!found) {
+//             this.colors.push(cellColor);
+//         }
+//     }
+// };
+//
+// var steps = [1, -1, gridSize, -gridSize];
+//
+// var colorCenters = [];
 
     /**
      * zeroColorCenters - zeros out the x,y location parameters for all color zones
      * @param colorZones
      */
-    function zeroColorCenters(colorZones){
+    function zeroColorCenters(colorZones) {
         colorCenters = [];
-        for (var i=0; i<colorZones.size; i++){
-            colorCenters.push({x:0, y:0});
-        }
-    }
-
-    /**
-     * calculates the average x and y centroid for each color pattern
-     *
-     */
-    function calculateColorCenters(){
-        // fill the colors array - one object per colorZone pattern
-        colorCenters = zeroColorCenters(colorZones);
-        //retrieve color index per cell, increment those position sums
-        for (var x=0; x< gridSize; x++){
-            for ( var y=0; y<gridSize; y++){
-                var pos = x * gridSize + y;
-                // get color index at each grid point
-                var colorGridPt = dataGrid[pos].colorZone;
-
-                var z = colorCenters[colorGridPt];
-                z.x += x;
-                z.y += y;
-                colorCenters[colorGridPt] = z;
-            }
+        for (var i = 0; i < colorZones.size; i++) {
+            colorCenters.push({x: 0, y: 0});
         }
     }
 
