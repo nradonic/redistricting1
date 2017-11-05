@@ -130,8 +130,8 @@ function nextGen(graphicData) {
         for (var colorNumber = 0; colorNumber < colorZones.length; colorNumber++) {
 
             if (colorNumber === dataGrid[i]) {
-                var MaxSwap = colorDistance(i,colorNumber);
-                MaxSwap = MaxSwap * MaxSwap;
+                var MaxSwap = 200; //colorDistance(i,colorNumber);
+                //MaxSwap = MaxSwap * MaxSwap;
                 var q = i2XY(i);
                 var x = q.X;
                 var y = q.Y;
@@ -151,7 +151,8 @@ function nextGen(graphicData) {
                     //  }
                     if (distX !== x1 || distY !== y1) {
                         if (swapCells(distX, distY, x1, y1)) {
-                            averagePositions();
+                            //averagePositions();
+                            //var col1 =
                             swap += 1;
                             x1 = distX;
                             y1 = distY;

@@ -131,6 +131,9 @@ function GraphicSpace(GridSize, ColorSpace) {
             cp.X = (cp.X) * squareSide;
             cp.Y = (cp.Y) * squareSide;
             var t = 'rgba(' + 0 + ',' + 0 + ',' + 0 + ',255)';
+            if (i === 0) {  // black color complement....
+                t = 'rgba(' + 255 + ',' + 255 + ',' + 255 + ',255)';
+            }
             ctx.strokeStyle = t;
             if (squareSide > 10) {
                 ctx.lineWidth = 5;
