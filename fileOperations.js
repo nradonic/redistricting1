@@ -5,7 +5,7 @@ function SaveData() {
     savedData = JSON.stringify({
         gridSize: gridSize,
         gridSize2: gridSize2,
-        screenDraw: screenDraw,
+        screenDraw: screenDrawCount,
         ColorSpace: ColorSpace,
         screenDelay: screenDelay,
         dataGrid: dataGrid
@@ -28,7 +28,7 @@ function LoadData() {
     var b = JSON.parse(savedData);
     gridSize = b.gridSize;
     gridSize2 = b.gridSize2;
-    screenDraw = b.screenDraw;
+    screenDrawCount = b.screenDraw;
     screenDelay = b.screenDelay;
     ColorSpace = b.ColorSpace;
     dataGrid = b.dataGrid;

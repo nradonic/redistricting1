@@ -17,6 +17,16 @@ function nextGen(graphicData) {
         return this;
     }
 
+    /**
+     * returns a random integer scaled to argument
+     * @param scaleIt
+     * @returns {number}
+     */
+    function randGS(scaleIt) {
+        var a = Math.floor(Math.random() * scaleIt);
+        return a;
+    }
+
     var colorPositions = [];
 
     // fill the positions with 0,0 values - for each colorZone
@@ -30,18 +40,18 @@ function nextGen(graphicData) {
     clearPositions();
 
     // convert i (0 - gridsize-1) to x,y coords
-    function i2XY(i) {
+    function index2XYValues(i) {
         var x = Math.floor(i % gridSize);
         var y = Math.floor(i / gridSize);
         return {X: x, Y: y};
     }
 
-    // work out x and y and add positions to per color sum and increment count per color
-    // adds offset to push centroids apart
-    function averagePositions() {  // x location, y location, count, sum of square distances
-        clearPositions();
+    /**
+     *
+     */
+    function addupXYPositions() {
         for (var i = 0; i < gridSize2; i++) {
-            var q = i2XY(i);
+            var q = index2XYValues(i);
             var x = q.X;
             var y = q.Y;
             var z = dataGrid[i];
@@ -50,120 +60,159 @@ function nextGen(graphicData) {
             colorPositions[z].Z = colorPositions[z].Z + 1;
             colorPositions[z].SumSQ = 0;
         }
-        // scale sums by count....to calculate averages
-        graphicData.clearCentroidPositions();
+    }
+
+    /**
+     *
+     * @param colorPositions
+     * @param graphicData
+     */
+    function normalizeCentroidByColorTypeCount(colorPositions, graphicData) {
         for (var i = 0; i < colorPositions.length; i++) {
             if (colorPositions[i].Z !== 0) {
                 colorPositions[i].X = colorPositions[i].X / colorPositions[i].Z;
-                // colorPositions[i].X = colorPositions[i].X + Math.sign(colorPositions[i].X - midGrid);
                 colorPositions[i].Y = colorPositions[i].Y / colorPositions[i].Z;
-                // colorPositions[i].Y = colorPositions[i].Y + Math.sign(colorPositions[i].Y - midGrid);
             }
+        }
+        graphicData.clearCentroidPositions();
+        for (var i = 0; i < colorPositions.length; i++) {
             // write centroid positions {x,y} to graphicSpace object
             graphicData.pushCentroidPositions(colorPositions[i].X, colorPositions[i].Y);
         }
     }
 
-    averagePositions();
+    // work out x and y and add positions to per color sum and increment count per color
+    // adds offset to push centroids apart
+    function calculateCentroidPositions() {  // x location, y location, count, sum of square distances
+        clearPositions();
+        addupXYPositions();
+
+        // scale sums by count....to calculate averages
+        graphicData.clearCentroidPositions();
+        normalizeCentroidByColorTypeCount(colorPositions, graphicData);
+    }
+
+    calculateCentroidPositions();
 
     // // calculate sums of squares of distances per color
-    // function sumOfSquares() {
-    //     averagePositions();
-    //     for (var i = 0; i < gridSize2; i++) {
-    //         var x = Math.floor(i % gridSize);
-    //         var y = Math.floor(i / gridSize);
-    //         var z = dataGrid[i];
-    //         var dist = (x - positions[z].X) * (x - positions[z].X) +
-    //             (y - positions[z].Y ) * ( y * positions[z].Y );
-    //         positions[z].SumSQ = positions[z].SumSQ + dist;
-    //     }
-    // }
-    //
-    // // calculate sum of squares distances from centroids
-    // sumOfSquares();
-    //
-    // function getFurthestEntry(maxColor) {
-    //     var furthest = {X: 0, Y: 0, Dist: 0};
-    //     var furthestDist = 0;
-    //
-    //     for (var i = 0; i < gridSize2; i++) {
-    //         if (dataGrid[i] === maxColor) {
-    //             var x = Math.floor(i % gridSize);
-    //             var y = Math.floor(i / gridSize);
-    //             var dist = (x - positions[maxColor].X) * (x - positions[maxColor].X) +
-    //                 (y - positions[maxColor].Y ) * ( y - positions[maxColor].Y );
-    //             if (dist > furthestDist) {
-    //                 furthestDist = dist;
-    //                 furthest = {X: x, Y: y, Dist: Math.sqrt(furthestDist)};
-    //             }
-    //         }
-    //     }
-    //     return furthest;
-    // }
-
-    function swapCells(newX, newY, oldX, oldY) {
-        var swap = 0;
-        if ((newX !== oldX || newY !== oldY)) {
-            var i = newY * gridSize + newX;
-            var j = oldY * gridSize + oldX;
-            var tempSwap = dataGrid[i];
-            dataGrid[i] = dataGrid[j];
-            dataGrid[j] = tempSwap;
-            if (dataGrid[i] !== dataGrid[j]) {
-                swap = 1;
-            }
+    function sumOfSquares() {
+        calculateCentroidPositions();
+        for (var i = 0; i < gridSize2; i++) {
+            var x = Math.floor(i % gridSize);
+            var y = Math.floor(i / gridSize);
+            var z = dataGrid[i];
+            var dist = (x - colorPositions[z].X) * (x - colorPositions[z].X) +
+                (y - colorPositions[z].Y) * (y * colorPositions[z].Y);
+            colorPositions[z].SumSQ = colorPositions[z].SumSQ + dist;
         }
-        return swap;
     }
 
-    function colorDistance(i,colorNumber) {
-        var q = i2XY(i);
-        var x = q.X;
-        var y = q.Y;
-        var dX = Math.abs(colorPositions[colorNumber].X - x);
-        var dY = Math.abs(colorPositions[colorNumber].Y - y);
-        return dX+dY;
-    }
+    // calculate sum of squares distances from centroids
+    sumOfSquares();
 
+    function fetchColorCentroidVector(gridIndex, colorAtIndex) {
+        var xYPosition = index2XYValues(gridIndex);
+        var locationOfCentroidX = colorPositions[colorAtIndex].X - xYPosition.X;
+        var locationOfCentroidY = colorPositions[colorAtIndex].Y - xYPosition.Y;
+        return {X: locationOfCentroidX, Y: locationOfCentroidY}
+    }
 
     for (var i = 0; i < gridSize2; i++) {
-        for (var colorNumber = 0; colorNumber < colorZones.length; colorNumber++) {
+        var test = fetchColorCentroidVector(i, dataGrid[i]);
+    }
 
-            if (colorNumber === dataGrid[i]) {
-                var MaxSwap = 200; //colorDistance(i,colorNumber);
-                //MaxSwap = MaxSwap * MaxSwap;
-                var q = i2XY(i);
-                var x = q.X;
-                var y = q.Y;
-                var swap = 1;
-                var x1 = x;
-                var y1 = y;
+    function distanceToCentroid(spotIndex, colorToTest) {
+        var distance = 0;
+        if (spotIndex >= 0 && spotIndex < gridSize2) {
 
-                while (swap < MaxSwap) {
-                    var distX = x1 - colorPositions[colorNumber].X;
-                    var distY = y1 - colorPositions[colorNumber].Y;
+            var k = fetchColorCentroidVector(spotIndex, colorToTest);
+            var z = index2XYValues(spotIndex);
+            distance = Math.sqrt((k.X - z.X) * (k.X - z.X) + (k.Y - z.Y) * (k.Y - z.Y));
+        }
+        return distance;
+    }
 
-                    //  if (Math.abs(distX) > 0.5) {
-                    distX = x1 - Math.sign(distX); // move one space closer...
-                    // }
-                    // if (Math.abs(distY) > 0.5) {
-                    distY = y1 - Math.sign(distY); // move one space closer...
-                    //  }
-                    if (distX !== x1 || distY !== y1) {
-                        if (swapCells(distX, distY, x1, y1)) {
-                            //averagePositions();
-                            //var col1 =
-                            swap += 1;
-                            x1 = distX;
-                            y1 = distY;
-                        }
-                    } else {
-                        swap = MaxSwap;
-                    }
-                    swap += 1;
-                }
+    for (var i = 0; i < gridSize2; i++) {
+        test2 = distanceToCentroid(i, 0);
+    }
+
+    function evaluateDistances(gridIndex, colorsBlock, signsOfVector) {
+
+        var k1 = distanceToCentroid(gridIndex, colorsBlock.col1);
+        var k2 = distanceToCentroid(gridIndex + signsOfVector.X, colorsBlock.col2);
+        var k3 = distanceToCentroid(gridIndex + signsOfVector.X + signsOfVector.Y * gridSize, colorsBlock.col3);
+        var k4 = distanceToCentroid(gridIndex + signsOfVector.Y * gridSize, colorsBlock.col4);
+        var distances = k1*k1*k1*k1 + k2*k2*k2*k2 + k3*k3*k3*k3 + k4*k4*k4*k4;
+        return distances;
+    }
+
+    function rotateColorsInGrid(gridIndex, signsOfVector, rotatedColors) {
+        dataGrid[gridIndex] = rotatedColors.col1;
+        dataGrid[gridIndex + signsOfVector.X] = rotatedColors.col2;
+        dataGrid[gridIndex + signsOfVector.X + signsOfVector.Y * gridSize] = rotatedColors.col3;
+        dataGrid[gridIndex + signsOfVector.Y * gridSize] = rotatedColors.col4;
+    }
+
+    function rotateColors(initialColors, signs, yInversion) {
+        if (yInversion) {
+            color1 = initialColors.col4;
+            color2 = initialColors.col1;
+            color3 = initialColors.col2;
+            color4 = initialColors.col3;
+            return {col1: color1, col2: color2, col3: color3, col4: color4};
+        }
+        color1 = initialColors.col2;
+        color2 = initialColors.col3;
+        color3 = initialColors.col4;
+        color4 = initialColors.col1;
+        return {col1: color1, col2: color2, col3: color3, col4: color4};
+    }
+
+    function getColors(gridIndex, signsOfVector) {
+        color1 = dataGrid[gridIndex];
+        color2 = dataGrid[gridIndex + signsOfVector.X];
+        color3 = dataGrid[gridIndex + signsOfVector.X + signsOfVector.Y * gridSize];
+        color4 = dataGrid[gridIndex + signsOfVector.Y * gridSize];
+        return {col1: color1, col2: color2, col3: color3, col4: color4};
+    }
+
+    function evaluateRotation(gridIndex, centroidVector, signsOfVector, yInversionFlag) {
+        var colorsInitial = getColors(gridIndex, signsOfVector);
+        var scoreNotRotation = evaluateDistances(gridIndex, colorsInitial, signsOfVector);
+        var colorsRotated = rotateColors(colorsInitial, signsOfVector, yInversionFlag)
+        var scoreRotated = evaluateDistances(gridIndex, colorsRotated, signsOfVector);
+
+        if (scoreRotated < scoreNotRotation) {
+            rotateColorsInGrid(gridIndex, signsOfVector, colorsRotated);
+        }
+    }
+
+    function signsOfVectorToCentroid(vector) {
+        var signs = {X: Math.sign(vector.X), Y: Math.sign(vector.Y)};
+        return signs;
+    }
+
+    function invertYRotationFlag(vector) {
+        var yinversion = (Math.abs(vector.X) > Math.abs(vector.Y));
+        return yinversion;
+    }
+
+    function processRotation(gridIndex, centroidVector) {
+        var signsOfVector = signsOfVectorToCentroid(centroidVector);
+        var yInversionFlag = invertYRotationFlag(centroidVector);
+        evaluateRotation(gridIndex, centroidVector, signsOfVector, yInversionFlag)
+    }
+
+    function loopThroughDatagrid() {
+        for (var gridIndex = 0; gridIndex < gridSize2; gridIndex++) {
+            var colorAtIndex = dataGrid[gridIndex];
+            var centroidVector = fetchColorCentroidVector(gridIndex, colorAtIndex);
+            if (dataGrid[gridIndex] === colorAtIndex) {
+                processRotation(gridIndex, centroidVector);
             }
         }
     }
+
+    loopThroughDatagrid();
     var a = 0;
 }

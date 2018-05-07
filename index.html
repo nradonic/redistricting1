@@ -9,10 +9,10 @@
 	<link rel="stylesheet" type="text/css" href="fillCanvas.css">
 	<link rel="SHORTCUT ICON" href="../radonicimages/happy.ico">
 
-	<link rel="shortcut icon" type="image/png" href="jasmine/lib/jasmine-2.0.0/jasmine_favicon.png">
+	<link rel="shortcut icon" type="image/png" href="jasmine-standalone-2.3.4/lib/jasmine-2.3.4/jasmine_favicon.png">
     <style type="text/css">
-   		p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; -webkit-text-stroke: #000000}
-    	p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; -webkit-text-stroke: #000000; min-height: 14.0px}
+   		p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; -webkit-text-fill-color: black}
+    	p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; -webkit-text-fill-color:black; min-height: 14.0px}
     	span.s1 {font-kerning: none}
   	</style>
 </head>
@@ -29,7 +29,7 @@
 	<br>
 	<h3 style="width:800px;text-align:center">Simple redistricting - by element flow</h3>
 	<p>Nearby colored pixels are swapped if the net local color matches are better</p>
-	<p>Screen Draw: <span id="screenDraw"></span>
+	<p>Screen Draw: <span id="screenDrawCount"></span>
 	<span width="200px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
 	<button  id="step" onclick='step();'>Step</button>&nbsp;&nbsp;
 	<button  id="PausePlay" onclick='PausePlay();'>Pause/Play</button>

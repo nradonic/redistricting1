@@ -3,10 +3,6 @@ function GraphicSpace(GridSize, ColorSpace) {
     this.gridSize = GridSize;
     this.colorSpace = ColorSpace;
 
-    var gridSize2 = gridSize * gridSize;
-
-    // dataGrid stores graphic data
-    var dataGrid = new Array(gridSize2);
 
     var COLORSCALE = 255;
 
@@ -16,23 +12,6 @@ function GraphicSpace(GridSize, ColorSpace) {
         this.green = green;
         this.blue = blue;
     }
-
-    //this.centroidPositions = []
-    var centroidPositions = [];
-
-    this.clearCentroidPositions = function () {
-        centroidPositions = [];
-    }
-    this.pushCentroidPositions = function (x, y) {
-        centroidPositions.push({X: x, Y: y});
-    }
-
-    this.centroid = function (x, y) {
-        this.x = x;
-        this.y = y;
-        return {X: x, Y: y};
-    }
-
 
     /**
      * Generate scaled color numbers - uses external color
@@ -68,8 +47,44 @@ function GraphicSpace(GridSize, ColorSpace) {
         return colorZones;
     }
 
+    var gridSize2 = gridSize * gridSize;
+
+    // dataGrid stores graphic data
+    var dataGrid = [];
 
     /**
+     * fillDataGrid
+     * @param dG data array
+     * @param gs2 size of array
+     */
+    fillDataGrid: function fillDataGrid(gridLength) {
+        for (var i = 0; i < gridLength; i++) {
+            dataGrid[i] = randGS(colorZones.length);
+        }
+    }
+
+    fillDataGrid(gridSize2)
+
+
+    //this.centroidPositions = []
+    var centroidPositions = [];
+
+    this.clearCentroidPositions = function () {
+        centroidPositions = [];
+    }
+    this.pushCentroidPositions = function (x, y) {
+        centroidPositions.push({X: x, Y: y});
+    }
+
+    this.centroid = function (x, y) {
+        this.x = x;
+        this.y = y;
+        return {X: x, Y: y};
+    }
+
+
+
+      /**
      * returns a random integer scaled to argument
      * @param scaleIt
      * @returns {number}
@@ -78,21 +93,6 @@ function GraphicSpace(GridSize, ColorSpace) {
         var a = Math.floor(Math.random() * scaleIt);
         return a;
     }
-
-    /**
-     * fillDataGrid
-     * @param dG data array
-     * @param gs2 size of array
-     */
-    fillDataGrid: function fillDataGrid(gridSize1) {
-        gridSize = gridSize1;
-        gridSize2 = gridSize1 * gridSize1;
-        for (var i = 0; i < gridSize2; i++) {
-            dataGrid[i] = randGS(colorZones.length);
-        }
-    }
-
-    fillDataGrid(gridSize);
 
     // external get gridSize
     this.getGridSize = function () {
@@ -104,22 +104,10 @@ function GraphicSpace(GridSize, ColorSpace) {
         return dataGrid;
     }
 
-    // extension to Array type for 2D, with initialization - from Douglas Crockford
-    Array.matrix = function (numrows, numcols, initial) {
-        var arr = [];
-        for (var i = 0; i < numrows; ++i) {
-            var columns = [];
-            for (var j = 0; j < numcols; ++j) {
-                columns[j] = {dist: 0, dist2: 0};
-            }
-            arr[i] = columns;
-        }
-        return arr;
-    };
 
 // draw data
     this.drawData = function () {
-        document.getElementById("screenDraw").innerHTML = screenDraw.toFixed(0);
+        document.getElementById("screenDrawCount").innerHTML = screenDrawCount.toFixed(0);
         document.getElementById("changes").innerHTML = changes.toFixed(0);
         document.getElementById("totalChanges").innerHTML = totalChanges.toFixed(0);
         document.getElementById("noiseLevel").innerHTML = noiseLevel.toFixed(0);
@@ -138,7 +126,7 @@ function GraphicSpace(GridSize, ColorSpace) {
             if (squareSide > 10) {
                 ctx.lineWidth = 5;
             } else {
-                ctx.lineWidth = 1;
+                ctx.lineWidth = 5;
             }
             ctx.strokeRect(cp.X, cp.Y, squareSide, squareSide);
         }

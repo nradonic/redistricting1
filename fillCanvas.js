@@ -1,6 +1,6 @@
 // CanvasGames - Annealing of colors - swapping two cell values if it is a better color match
 
-var screenDraw = 0;
+var screenDrawCount = 0;
 var screenDelay = 1;
 var gridSize = 4;
 var gridSize2 = gridSize * gridSize;
@@ -20,9 +20,6 @@ var noiseLevel = 0;
 var forceRange = 10;
 var savedData = "";
 
-var fftLayer = "All";
-
-
 // dataGrid stores graphic data
 var dataGrid = new Array(gridSize2);
 var fftGrid = new Array(gridSize2);
@@ -40,60 +37,70 @@ function reconfigureGridRelatedStructures(dropdownSize, dropdownColor, dropdownR
 
     // generate new grid....
     districts = new GraphicSpace(gridSize, ColorSpace);
-    screenDraw = 0;
+    screenDrawCount = 0;
 }
 
-// handle html button presses
+/**
+ *
+ */
+function drawDistricts() {
+    districts.drawData();
+    districts.drawCanvas1();
+}
+
+/**
+ * handle html button presses
+ * @param param
+ * @constructor
+ */
 function OnChange(param) {
     var dropdownSize = document.getElementById("select1");
     var dropdownColor = document.getElementById("select2");
     var dropdownRange = document.getElementById("select4");
 
     reconfigureGridRelatedStructures(dropdownSize, dropdownColor, dropdownRange);
-    districts.drawData();
-    districts.drawCanvas1();
+    drawDistricts();
     serviceFlag = true;
 }
 
+/**
+ *
+ */
 function smooth() {
-    screenDraw++;
-    districts.drawData();
-    districts.drawCanvas1();
+    screenDrawCount++;
+    drawDistricts();
+    // var graphicsDataGrid = districts.getDataGrid();
     nextGen(districts);
-    districts.drawData();
-    districts.drawCanvas1();
+    drawDistricts();
+    // graphicsDataGrid = districts.getDataGrid();
+    a = 1;
 }
 
-function cycle(myVarr) {
-    smooth();
-    districts.drawData();
-    if (serviceFlag) {
-        clearInterval(myVarr);
-        if (Step === false) {
-            startLooping();
-        }
-    }
-}
-
-var myVar;
+var myLoopingVariable;
 
 // start calculating updates
+/**
+ *
+ */
 function startLooping() {
-    myVar = setInterval(function () {
-        cycle(myVar)
+    myLoopingVariable = setInterval(function () {
+        smooth()   // cycle()
     }, screenDelay);
     Pause = false;
     document.getElementById("PausePlay").innerHTML = "Pause";
 }
 
-// start repeating operations
+
+/**
+ * start repeating operations
+ */
 function start() {
     Step = false;
     startLooping();
 }
 
 function stop() {
-    clearInterval(myVar);
+    clearInterval(myLoopingVariable);
     Pause = true;
     document.getElementById("PausePlay").innerHTML = "Play";
 }
@@ -101,13 +108,18 @@ function stop() {
 function step() {
     stop();
     Step = true;
-    cycle(myVar);
+    smooth(); //cycle();
 }
 
 function cycleDelay() {
     var dropdownDelay = document.getElementById("select3");
+    var state = Pause;
+    stop();
     screenDelay = parseInt(dropdownDelay.options[dropdownDelay.selectedIndex].value);
-    serviceFlag = true;
+    if (!state) {
+        start();
+    }
+    // serviceFlag = true;
 }
 
 function ButtonLabelToPlay() {
@@ -118,10 +130,9 @@ function ButtonLabelToPlay() {
 function PausePlay() {
     if (Pause) {
         start();
+        return;
     }
-    else {
-        stop();
-    }
+    stop();
 }
 
 OnChange(0);
