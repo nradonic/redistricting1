@@ -1,7 +1,7 @@
 describe("Canvas Games", function(){
 
-	it("screenDraw should be at zero", function(){
-		expect(screenDraw).toEqual(0);
+	it("screenDrawCount should be at zero", function(){
+		expect(screenDrawCount).toEqual(0);
 	
 	});
 	

@@ -136,13 +136,40 @@ function nextGen(graphicData) {
         test2 = distanceToCentroid(i, 0);
     }
 
+    function colorDiffers(gridIndex, colorID) {
+        var k = 1;
+        if (dataGrid[gridIndex] === colorID) {
+            k = 0;
+        }
+        return k;
+    }
+
+    function freedomFromNeighbors(gridIndex, colorID) {
+        var k = 0;
+        if (gridIndex >= 0 && gridIndex < gridSize2) {
+            k = colorDiffers(gridIndex, colorID);
+        }
+        return k;
+    }
+
+    function noNeighborsCount(gridIndex) {
+        var colorHere = dataGrid[gridIndex];
+
+        var free1 = freedomFromNeighbors(gridIndex - 1, colorHere);
+        var free2 = freedomFromNeighbors(gridIndex + 1, colorHere);
+        var free3 = freedomFromNeighbors(gridIndex - gridSize, colorHere);
+        var free4 = freedomFromNeighbors(gridIndex + gridSize, colorHere);
+        return free1 + free2 + free3 + free4;
+    }
+
     function evaluateDistances(gridIndex, colorsBlock, signsOfVector) {
 
         var k1 = distanceToCentroid(gridIndex, colorsBlock.col1);
         var k2 = distanceToCentroid(gridIndex + signsOfVector.X, colorsBlock.col2);
         var k3 = distanceToCentroid(gridIndex + signsOfVector.X + signsOfVector.Y * gridSize, colorsBlock.col3);
         var k4 = distanceToCentroid(gridIndex + signsOfVector.Y * gridSize, colorsBlock.col4);
-        var distances = k1*k1*k1*k1 + k2*k2*k2*k2 + k3*k3*k3*k3 + k4*k4*k4*k4;
+
+        var distances = k1 * k1 * k1 * k1 + k2 * k2 * k2 * k2 + k3 * k3 * k3 * k3 + k4 * k4 * k4 * k4;
         return distances;
     }
 
@@ -194,6 +221,9 @@ function nextGen(graphicData) {
 
     function invertYRotationFlag(vector) {
         var yinversion = (Math.abs(vector.X) > Math.abs(vector.Y));
+        if (Math.random() > 0.8) {
+            yinversion = -yinversion;
+        }
         return yinversion;
     }
 
@@ -205,12 +235,14 @@ function nextGen(graphicData) {
 
     function loopThroughDatagrid() {
         for (var gridIndex = 0; gridIndex < gridSize2; gridIndex++) {
-            var colorAtIndex = dataGrid[gridIndex];
-            var centroidVector = fetchColorCentroidVector(gridIndex, colorAtIndex);
-            if (dataGrid[gridIndex] === colorAtIndex) {
+            if (noNeighborsCount(gridIndex) > randGS(4)) {
+                var colorAtIndex = dataGrid[gridIndex];
+                var centroidVector = fetchColorCentroidVector(gridIndex, colorAtIndex);
                 processRotation(gridIndex, centroidVector);
+
             }
         }
+
     }
 
     loopThroughDatagrid();
