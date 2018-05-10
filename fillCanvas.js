@@ -48,6 +48,7 @@ function drawDistricts() {
     districts.drawCanvas1();
 }
 
+var changeFound = 0;
 /**
  * handle html button presses
  * @param param
@@ -70,10 +71,10 @@ function smooth() {
     screenDrawCount++;
     drawDistricts();
     // var graphicsDataGrid = districts.getDataGrid();
-    nextGen(districts);
+    changeFound = nextGen(districts);
     drawDistricts();
     // graphicsDataGrid = districts.getDataGrid();
-    a = 1;
+    // a = 1;
 }
 
 var myLoopingVariable;

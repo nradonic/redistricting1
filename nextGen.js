@@ -169,15 +169,19 @@ function nextGen(graphicData) {
         var k3 = distanceToCentroid(gridIndex + signsOfVector.X + signsOfVector.Y * gridSize, colorsBlock.col3);
         var k4 = distanceToCentroid(gridIndex + signsOfVector.Y * gridSize, colorsBlock.col4);
 
-        var distances = k1 * k1 * k1 * k1 + k2 * k2 * k2 * k2 + k3 * k3 * k3 * k3 + k4 * k4 * k4 * k4;
+        var distances = k1 * k1 + k2 * k2 + k3 * k3 + k4 * k4;
+        // k1 * k1 * k1 * k1 + k2 * k2 * k2 * k2 + k3 * k3 * k3 * k3 + k4 * k4 * k4 * k4;
         return distances;
     }
+
+    var changeFound = 0;
 
     function rotateColorsInGrid(gridIndex, signsOfVector, rotatedColors) {
         dataGrid[gridIndex] = rotatedColors.col1;
         dataGrid[gridIndex + signsOfVector.X] = rotatedColors.col2;
         dataGrid[gridIndex + signsOfVector.X + signsOfVector.Y * gridSize] = rotatedColors.col3;
         dataGrid[gridIndex + signsOfVector.Y * gridSize] = rotatedColors.col4;
+        changeFound = 1;
     }
 
     function rotateColors(initialColors, signs, yInversion) {
@@ -203,11 +207,26 @@ function nextGen(graphicData) {
         return {col1: color1, col2: color2, col3: color3, col4: color4};
     }
 
+    function rotatedIndexPosition(gridIndex, signsOfVector, yInversionFlag) {
+        if (yInversionFlag) {
+            rotatedGridIndex = gridIndex + signsOfVector.Y * gridSize;
+        }
+        rotatedGridIndex = gridIndex + signsOfVector.X;
+        rotatedGridIndex = Math.max(0, Math.min(rotatedGridIndex, gridSize2));
+        return rotatedGridIndex;
+    }
+
     function evaluateRotation(gridIndex, centroidVector, signsOfVector, yInversionFlag) {
         var colorsInitial = getColors(gridIndex, signsOfVector);
         var scoreNotRotation = evaluateDistances(gridIndex, colorsInitial, signsOfVector);
         var colorsRotated = rotateColors(colorsInitial, signsOfVector, yInversionFlag)
         var scoreRotated = evaluateDistances(gridIndex, colorsRotated, signsOfVector);
+
+        var noRotationNeighborsCount = noNeighborsCount(gridIndex);
+        var rotatedGridIndex = rotatedIndexPosition(gridIndex, signsOfVector, yInversionFlag);
+        var rotatedNeighborsCount = noNeighborsCount(rotatedGridIndex);
+        scoreNotRotation *= 10 + noRotationNeighborsCount;
+        scoreRotated *= 10 + rotatedNeighborsCount;
 
         if (scoreRotated < scoreNotRotation) {
             rotateColorsInGrid(gridIndex, signsOfVector, colorsRotated);
@@ -234,7 +253,8 @@ function nextGen(graphicData) {
     }
 
     function loopThroughDatagrid() {
-        for (var gridIndex = 0; gridIndex < gridSize2; gridIndex++) {
+        for (var gridIndex1 = 0; gridIndex1 < gridSize2; gridIndex1++) {
+            var gridIndex = randGS(gridSize2);
             if (noNeighborsCount(gridIndex) > randGS(4)) {
                 var colorAtIndex = dataGrid[gridIndex];
                 var centroidVector = fetchColorCentroidVector(gridIndex, colorAtIndex);
@@ -247,4 +267,5 @@ function nextGen(graphicData) {
 
     loopThroughDatagrid();
     var a = 0;
+    return changeFound;
 }
