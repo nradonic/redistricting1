@@ -60,7 +60,10 @@ function GraphicSpace(GridSize, ColorSpace) {
     fillDataGrid: function fillDataGrid(gridLength) {
         for (var i = 0; i < gridLength; i++) {
             dataGrid[i] = randGS(colorZones.length);
+            // dataGrid[i] = 1;
         }
+        // dataGrid[gridSize+1]=2;
+        // dataGrid[gridSize2 - gridSize -2]=2;
     }
 
     fillDataGrid(gridSize2)
@@ -75,14 +78,6 @@ function GraphicSpace(GridSize, ColorSpace) {
     this.pushCentroidPositions = function (x, y) {
         centroidPositions.push({X: x, Y: y});
     }
-
-    this.centroid = function (x, y) {
-        this.x = x;
-        this.y = y;
-        return {X: x, Y: y};
-    }
-
-
 
       /**
      * returns a random integer scaled to argument
@@ -106,9 +101,9 @@ function GraphicSpace(GridSize, ColorSpace) {
 
 
 // draw data
-    this.drawData = function () {
+    this.drawData = function (changesFound, totalChanges) {
         document.getElementById("screenDrawCount").innerHTML = screenDrawCount.toFixed(0);
-        document.getElementById("changes").innerHTML = changes.toFixed(0);
+        document.getElementById("changes").innerHTML = changesFound.toFixed(0);
         document.getElementById("totalChanges").innerHTML = totalChanges.toFixed(0);
         document.getElementById("noiseLevel").innerHTML = noiseLevel.toFixed(0);
     }
@@ -153,170 +148,6 @@ function GraphicSpace(GridSize, ColorSpace) {
         }
         drawCentroids(ctx, squareSide);
         ctx.stroke();
-    }
-
-    function diffSQ0(ST1, ST2) {
-        if (dataGrid[ST1].r === dataGrid[ST2].r &&
-            dataGrid[ST1].g === dataGrid[ST2].g &&
-            dataGrid[ST1].b === dataGrid[ST2].b) {
-            return 0;
-        } else {
-            return 10000;
-        }
-    }
-
-// color space maximum less color differences squared
-    function diffSQ(ST1, ST2) {
-        return maxTest - diffSQ0(ST1, ST2);
-    }
-
-    function fitColor(i1, j1, i2, j2) {
-        var ST1 = i1 * gridSize + j1;
-        var ST2 = i2 * gridSize + j2;
-        var edge = gridSize - 1;
-
-        var total = 0;
-        var cnt = 0;
-        if (j2 !== 0) {
-            total = diffSQ(ST1, ST2 - 1);
-            cnt++;
-        }
-        if (i2 !== 0 && j2 !== 0) {
-            total += diffSQ(ST1, ST2 - gridSize - 1) / 2;
-            cnt++;
-        }//2;
-        if (i2 !== 0) {
-            total += diffSQ(ST1, ST2 - gridSize);
-            cnt++;
-        }
-        if (i2 !== 0 && j2 !== edge) {
-            total += diffSQ(ST1, ST2 - gridSize + 1) / 2;
-            cnt++;
-        }///2;
-        if (j2 !== edge) {
-            total += diffSQ(ST1, ST2 + 1);
-            cnt++;
-        }
-        if (i2 !== edge && j2 !== 0) {
-            total += diffSQ(ST1, ST2 + gridSize - 1) / 2;
-            cnt++;
-        }//2;
-        if (i2 !== edge) {
-            total += diffSQ(ST1, ST2 + gridSize);
-            cnt++;
-        }
-        if (i2 !== edge && j2 !== edge) {
-            total += diffSQ(ST1, ST2 + gridSize + 1) / 2;
-            cnt++;
-        }//2;
-        return total / cnt;
-    }
-
-//convert i position in array to column value x
-    function iToX(i, gS) {
-        return Math.floor(i % gS);
-    }
-
-//convert i position in array to row value y
-    function iToY(i, gS) {
-        return Math.floor(i / gS);
-    }
-
-// convert x,y to i in square grid
-    function xYToI(x, y, gS) {
-        return x * gS + y;
-    }
-
-// calculate weighted color-diff^2/distance^2 over entire array for a specific cell
-    function forceAtGridPoint(i1, j1) {
-        var posn1 = xYToI(i1, j1, gridSize);
-        // sum of forces variable
-        var force = 0;
-
-        var i1Min = Math.max(i1 - forceRange, 0);
-        var i1Max = Math.min(i1 + forceRange, gridSize);
-
-        var j1Min = Math.max(j1 - forceRange, 0);
-        var j1Max = Math.min(j1 + forceRange, gridSize);
-
-        for (var i = i1Min; i < i1Max; i++) {
-            for (var j = j1Min; j < j1Max; j++) {
-                // get grid locations for 'i' element   2D->1D
-                // calculate position differences
-                var dx = j1 - j;
-                var dy = i1 - i;
-                // lookup location difference squared vector
-                var dist2 = distanceGrid[Math.abs(dy)][Math.abs(dx)].dist2;
-                var posn0 = xYToI(i, j, gridSize);
-                // calculate color difference squared
-                var dc = diffSQ0(posn0, posn1);
-                // add weighted force to sum of forces
-                var forceScalar = dc * dist2;
-                force += forceScalar;
-            }
-        }
-        return force;
-    }
-
-// trade colors at two locations
-    function trade(i1, j1, i2, j2) {
-        var one = i1 * gridSize + j1;
-        var two = i2 * gridSize + j2;
-
-        var r = dataGrid[one].r;
-        var g = dataGrid[one].g;
-        var b = dataGrid[one].b;
-
-        dataGrid[one].r = dataGrid[two].r;
-        dataGrid[one].g = dataGrid[two].g;
-        dataGrid[one].b = dataGrid[two].b;
-
-        dataGrid[two].r = r;
-        dataGrid[two].g = g;
-        dataGrid[two].b = b;
-    }
-
-// returns force reduction for swap : positive is an improvement, negative is a worsening of differences
-    function fitColorAll(i1, j1, i2, j2, force1) {
-        var posn1 = xYToI(i1, j1, gridSize);
-        var posn2 = xYToI(i2, j2, gridSize);
-        //var force1 = forceAtGridPoint(i1,j1);
-        var force2 = forceAtGridPoint(i2, j2);
-        trade(i1, j1, i2, j2);
-        var force1At2 = forceAtGridPoint(i2, j2);
-        var force2At1 = forceAtGridPoint(i1, j1);
-        trade(i1, j1, i2, j2);
-        return force1 + force2 - force1At2 - force2At1;
-    }
-
-// var cellColors = {
-//     colors: [],
-//     findOrAddColor: function (cellColor, cell, i, j) {
-//         var found = false;
-//         this.colors.forEach(function (element) {
-//             if (element.r === cellColor.r && element.g === cellColor.g && element.b === cellColor.b) {
-//                 found = true;
-//             }
-//         })
-//         if (!found) {
-//             this.colors.push(cellColor);
-//         }
-//     }
-// };
-//
-// var steps = [1, -1, gridSize, -gridSize];
-//
-// var colorCenters = [];
-
-    /**
-     * zeroColorCenters - zeros out the x,y location parameters for all color zones
-     * @param colorZones
-     */
-    function zeroColorCenters(colorZones) {
-        colorCenters = [];
-        for (var i = 0; i < colorZones.size; i++) {
-            colorCenters.push({x: 0, y: 0});
-        }
     }
 
     return this;

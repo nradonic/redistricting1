@@ -39,16 +39,16 @@ function reconfigureGridRelatedStructures(dropdownSize, dropdownColor, dropdownR
     districts = new GraphicSpace(gridSize, ColorSpace);
     screenDrawCount = 0;
 }
-
+var changesFound = 0;
 /**
  *
  */
 function drawDistricts() {
-    districts.drawData();
+    districts.drawData(changesFound, totalChanges);
     districts.drawCanvas1();
 }
 
-var changeFound = 0;
+
 /**
  * handle html button presses
  * @param param
@@ -71,7 +71,9 @@ function smooth() {
     screenDrawCount++;
     drawDistricts();
     // var graphicsDataGrid = districts.getDataGrid();
-    changeFound = nextGen(districts);
+    changesFound = nextGen(districts);
+    totalChanges += changesFound
+
     drawDistricts();
     // graphicsDataGrid = districts.getDataGrid();
     // a = 1;

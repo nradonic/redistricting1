@@ -1,7 +1,7 @@
 function nextGen(graphicData) {
     this.gridSize = graphicData.getGridSize();
     var gridSize2 = gridSize * gridSize;
-    var midGrid = (gridSize - 1) / 2;
+    var changeFound = 0;
 
     this.dataGrid = graphicData.getDataGrid();
 
@@ -9,11 +9,12 @@ function nextGen(graphicData) {
 
     this.colorSpace = graphicData.colorSpace;
 
-    function XY(X, Y, Z, SumSQ) {
+    function XY(X, Y, count, SumSQ, normalizedSumSQ) {
         this.X = X;
         this.Y = Y;
-        this.Z = Z;
+        this.Count = count;
         this.SumSQ = SumSQ;
+        this.normalizedSumSQ = normalizedSumSQ;
         return this;
     }
 
@@ -27,22 +28,27 @@ function nextGen(graphicData) {
         return a;
     }
 
-    var colorPositions = [];
+    // holds data structure for each color
+    var colorCentroidStructure = [];
 
     // fill the positions with 0,0 values - for each colorZone
-    function clearPositions() {
-        colorPositions = [];
+    function clearCentroidPositions() {
+        colorCentroidStructure = [];
         colorZones.forEach(function () {
-            colorPositions.push(new XY(0, 0, 0, 0));
+            // X Y count SumSQ SumSQ/sqrt(N)
+            colorCentroidStructure.push(new XY(0, 0, 0, 0, 0));
         });
     }
 
-    clearPositions();
+    clearCentroidPositions();
 
     // convert i (0 - gridsize-1) to x,y coords
-    function index2XYValues(i) {
-        var x = Math.floor(i % gridSize);
-        var y = Math.floor(i / gridSize);
+    function index2XYValues(gridIndex) {
+        if (gridIndex < 0 || gridIndex > gridSize2) {
+            return {X: 0, Y: 0};
+        }
+        var x = Math.floor(gridIndex % gridSize);
+        var y = Math.floor(gridIndex / gridSize);
         return {X: x, Y: y};
     }
 
@@ -54,80 +60,93 @@ function nextGen(graphicData) {
             var q = index2XYValues(i);
             var x = q.X;
             var y = q.Y;
-            var z = dataGrid[i];
-            colorPositions[z].X = colorPositions[z].X + x;
-            colorPositions[z].Y = colorPositions[z].Y + y;
-            colorPositions[z].Z = colorPositions[z].Z + 1;
-            colorPositions[z].SumSQ = 0;
+            var localColor = dataGrid[i];
+            colorCentroidStructure[localColor].X = colorCentroidStructure[localColor].X + x;
+            colorCentroidStructure[localColor].Y = colorCentroidStructure[localColor].Y + y;
+            // count entries per color
+            colorCentroidStructure[localColor].Count = colorCentroidStructure[localColor].Count + 1;
         }
     }
 
     /**
      *
      * @param colorPositions
-     * @param graphicData
      */
-    function normalizeCentroidByColorTypeCount(colorPositions, graphicData) {
+    function normalizeCentroidByColorTypeCount(colorPositions) {
         for (var i = 0; i < colorPositions.length; i++) {
-            if (colorPositions[i].Z !== 0) {
-                colorPositions[i].X = colorPositions[i].X / colorPositions[i].Z;
-                colorPositions[i].Y = colorPositions[i].Y / colorPositions[i].Z;
+            if (colorPositions[i].Count !== 0) {
+                colorPositions[i].X = colorPositions[i].X / colorPositions[i].Count;
+                colorPositions[i].Y = colorPositions[i].Y / colorPositions[i].Count;
             }
         }
+    }
+
+    function pushCentroidsToGraphicDataObject() {
         graphicData.clearCentroidPositions();
-        for (var i = 0; i < colorPositions.length; i++) {
+        for (var i = 0; i < colorCentroidStructure.length; i++) {
             // write centroid positions {x,y} to graphicSpace object
-            graphicData.pushCentroidPositions(colorPositions[i].X, colorPositions[i].Y);
+            graphicData.pushCentroidPositions(colorCentroidStructure[i].X, colorCentroidStructure[i].Y);
         }
+    }
+
+
+    function normalizeSumOfSquares() {
+        for (var colorIndex = 0; colorIndex < colorCentroidStructure.length; colorIndex++) {
+            colorCentroidStructure[colorIndex].normalizedSumSQ = 0;
+            if (colorCentroidStructure[colorIndex].Count !== 0) {
+                // colorCentroidStructure[colorIndex].normalizedSumSQ = colorCentroidStructure[colorIndex].SumSQ / Math.sqrt(colorCentroidStructure[colorIndex].Count);
+                colorCentroidStructure[colorIndex].normalizedSumSQ = colorCentroidStructure[colorIndex].SumSQ / colorCentroidStructure[colorIndex].Count;
+            }
+        }
+    }
+
+    // // calculate sums of squares of distances per color
+    function sumOfSquares() {
+        for (var gridIndex = 0; gridIndex < gridSize2; gridIndex++) {
+            var location = index2XYValues(gridIndex);
+            var color = dataGrid[gridIndex];
+            colorCentroidStructure[color].SumSQ += (location.X - colorCentroidStructure[color].X) *
+                (location.X - colorCentroidStructure[color].X) +
+                (location.Y - colorCentroidStructure[color].Y) * (location.Y * colorCentroidStructure[color].Y);
+        }
+        normalizeSumOfSquares();
     }
 
     // work out x and y and add positions to per color sum and increment count per color
     // adds offset to push centroids apart
     function calculateCentroidPositions() {  // x location, y location, count, sum of square distances
-        clearPositions();
+        clearCentroidPositions();
         addupXYPositions();
-
         // scale sums by count....to calculate averages
-        graphicData.clearCentroidPositions();
-        normalizeCentroidByColorTypeCount(colorPositions, graphicData);
+        normalizeCentroidByColorTypeCount(colorCentroidStructure);
+        sumOfSquares();
     }
 
-    calculateCentroidPositions();
-
-    // // calculate sums of squares of distances per color
-    function sumOfSquares() {
+    function updateCentroidPositions() {
         calculateCentroidPositions();
-        for (var i = 0; i < gridSize2; i++) {
-            var x = Math.floor(i % gridSize);
-            var y = Math.floor(i / gridSize);
-            var z = dataGrid[i];
-            var dist = (x - colorPositions[z].X) * (x - colorPositions[z].X) +
-                (y - colorPositions[z].Y) * (y * colorPositions[z].Y);
-            colorPositions[z].SumSQ = colorPositions[z].SumSQ + dist;
-        }
+        pushCentroidsToGraphicDataObject();
     }
 
-    // calculate sum of squares distances from centroids
-    sumOfSquares();
+    updateCentroidPositions();
 
-    function fetchColorCentroidVector(gridIndex, colorAtIndex) {
+    function fetchColorCentroidVector(gridIndex, colorAtIndexIn) {
+        var colorAtIndex = dataGrid[gridIndex];
+        if (arguments.length == 2) {
+            colorAtIndex = colorAtIndexIn;
+        }
         var xYPosition = index2XYValues(gridIndex);
-        var locationOfCentroidX = colorPositions[colorAtIndex].X - xYPosition.X;
-        var locationOfCentroidY = colorPositions[colorAtIndex].Y - xYPosition.Y;
+        var locationOfCentroidX = colorCentroidStructure[colorAtIndex].X - xYPosition.X;
+        var locationOfCentroidY = colorCentroidStructure[colorAtIndex].Y - xYPosition.Y;
         return {X: locationOfCentroidX, Y: locationOfCentroidY}
     }
 
-    for (var i = 0; i < gridSize2; i++) {
-        var test = fetchColorCentroidVector(i, dataGrid[i]);
-    }
-
-    function distanceToCentroid(spotIndex, colorToTest) {
+    function distanceToCentroid(cellIndex) {
         var distance = 0;
-        if (spotIndex >= 0 && spotIndex < gridSize2) {
-
-            var k = fetchColorCentroidVector(spotIndex, colorToTest);
-            var z = index2XYValues(spotIndex);
-            distance = Math.sqrt((k.X - z.X) * (k.X - z.X) + (k.Y - z.Y) * (k.Y - z.Y));
+        if (cellIndex >= 0 && cellIndex < gridSize2) {
+            var centroidVector = fetchColorCentroidVector(cellIndex);
+            var currentCellXY = index2XYValues(cellIndex);
+            distance = Math.sqrt((centroidVector.X - currentCellXY.X) * (centroidVector.X - currentCellXY.X) +
+                (centroidVector.Y - currentCellXY.Y) * (centroidVector.Y - currentCellXY.Y));
         }
         return distance;
     }
@@ -136,133 +155,220 @@ function nextGen(graphicData) {
         test2 = distanceToCentroid(i, 0);
     }
 
-    function colorDiffers(gridIndex, colorID) {
-        var k = 1;
-        if (dataGrid[gridIndex] === colorID) {
-            k = 0;
-        }
-        return k;
-    }
-
-    function freedomFromNeighbors(gridIndex, colorID) {
-        var k = 0;
-        if (gridIndex >= 0 && gridIndex < gridSize2) {
-            k = colorDiffers(gridIndex, colorID);
-        }
-        return k;
-    }
-
-    function noNeighborsCount(gridIndex) {
-        var colorHere = dataGrid[gridIndex];
-
-        var free1 = freedomFromNeighbors(gridIndex - 1, colorHere);
-        var free2 = freedomFromNeighbors(gridIndex + 1, colorHere);
-        var free3 = freedomFromNeighbors(gridIndex - gridSize, colorHere);
-        var free4 = freedomFromNeighbors(gridIndex + gridSize, colorHere);
-        return free1 + free2 + free3 + free4;
-    }
-
-    function evaluateDistances(gridIndex, colorsBlock, signsOfVector) {
-
-        var k1 = distanceToCentroid(gridIndex, colorsBlock.col1);
-        var k2 = distanceToCentroid(gridIndex + signsOfVector.X, colorsBlock.col2);
-        var k3 = distanceToCentroid(gridIndex + signsOfVector.X + signsOfVector.Y * gridSize, colorsBlock.col3);
-        var k4 = distanceToCentroid(gridIndex + signsOfVector.Y * gridSize, colorsBlock.col4);
-
-        var distances = k1 * k1 + k2 * k2 + k3 * k3 + k4 * k4;
-        // k1 * k1 * k1 * k1 + k2 * k2 * k2 * k2 + k3 * k3 * k3 * k3 + k4 * k4 * k4 * k4;
-        return distances;
-    }
-
-    var changeFound = 0;
-
-    function rotateColorsInGrid(gridIndex, signsOfVector, rotatedColors) {
-        dataGrid[gridIndex] = rotatedColors.col1;
-        dataGrid[gridIndex + signsOfVector.X] = rotatedColors.col2;
-        dataGrid[gridIndex + signsOfVector.X + signsOfVector.Y * gridSize] = rotatedColors.col3;
-        dataGrid[gridIndex + signsOfVector.Y * gridSize] = rotatedColors.col4;
-        changeFound = 1;
-    }
-
-    function rotateColors(initialColors, signs, yInversion) {
-        if (yInversion) {
-            color1 = initialColors.col4;
-            color2 = initialColors.col1;
-            color3 = initialColors.col2;
-            color4 = initialColors.col3;
-            return {col1: color1, col2: color2, col3: color3, col4: color4};
-        }
-        color1 = initialColors.col2;
-        color2 = initialColors.col3;
-        color3 = initialColors.col4;
-        color4 = initialColors.col1;
-        return {col1: color1, col2: color2, col3: color3, col4: color4};
-    }
-
     function getColors(gridIndex, signsOfVector) {
         color1 = dataGrid[gridIndex];
-        color2 = dataGrid[gridIndex + signsOfVector.X];
-        color3 = dataGrid[gridIndex + signsOfVector.X + signsOfVector.Y * gridSize];
-        color4 = dataGrid[gridIndex + signsOfVector.Y * gridSize];
-        return {col1: color1, col2: color2, col3: color3, col4: color4};
+        color2 = dataGrid[gridIndex + 1];
+        color3 = dataGrid[gridIndex + 1 + gridSize];
+        color4 = dataGrid[gridIndex + gridSize];
+        return {color1: color1, color2: color2, color3: color3, color4: color4};
     }
 
-    function rotatedIndexPosition(gridIndex, signsOfVector, yInversionFlag) {
-        if (yInversionFlag) {
-            rotatedGridIndex = gridIndex + signsOfVector.Y * gridSize;
+    function rotateColorBlock(gridIndex, initialColors, direction) {
+        if (direction === 0) {
+            dataGrid[gridIndex] = initialColors.color1;
+            dataGrid[gridIndex + 1] = initialColors.color2;
+            dataGrid[gridIndex + 1 + gridSize] = initialColors.color3;
+            dataGrid[gridIndex + gridSize] = initialColors.color4;
         }
-        rotatedGridIndex = gridIndex + signsOfVector.X;
-        rotatedGridIndex = Math.max(0, Math.min(rotatedGridIndex, gridSize2));
-        return rotatedGridIndex;
+        if (direction === 1) {
+            dataGrid[gridIndex] = initialColors.color2;
+            dataGrid[gridIndex + 1] = initialColors.color3;
+            dataGrid[gridIndex + 1 + gridSize] = initialColors.color4;
+            dataGrid[gridIndex + gridSize] = initialColors.color1;
+        }
+        if (direction === 2) {
+            dataGrid[gridIndex] = initialColors.color3;
+            dataGrid[gridIndex + 1] = initialColors.color4;
+            dataGrid[gridIndex + 1 + gridSize] = initialColors.color1;
+            dataGrid[gridIndex + gridSize] = initialColors.color2;
+        }
+        if (direction === 3) {
+            dataGrid[gridIndex] = initialColors.color4;
+            dataGrid[gridIndex + 1] = initialColors.color1;
+            dataGrid[gridIndex + 1 + gridSize] = initialColors.color2;
+            dataGrid[gridIndex + gridSize] = initialColors.color3;
+        }
+        calculateCentroidPositions();
     }
 
-    function evaluateRotation(gridIndex, centroidVector, signsOfVector, yInversionFlag) {
-        var colorsInitial = getColors(gridIndex, signsOfVector);
-        var scoreNotRotation = evaluateDistances(gridIndex, colorsInitial, signsOfVector);
-        var colorsRotated = rotateColors(colorsInitial, signsOfVector, yInversionFlag)
-        var scoreRotated = evaluateDistances(gridIndex, colorsRotated, signsOfVector);
+    function calculateCostForOneColor(color1, gridIndex) {
+        var sumdist2 = 0.0;
+        for (var element = 0; element < colorZones.length; element++) {
+            if (color1 !== element) {
+                var xy = index2XYValues(gridIndex);
+                distX = gridSize - Math.abs(colorCentroidStructure[element].X - xy.X);
+                distY = gridSize - Math.abs(colorCentroidStructure[element].Y - xy.Y);
+                distZ = (distX * distX + distY * distY) / (colorZones.length - 1);
+                sumdist2 += distZ;
+            }
+        }
+        return sumdist2;
+    }
 
-        var noRotationNeighborsCount = noNeighborsCount(gridIndex);
-        var rotatedGridIndex = rotatedIndexPosition(gridIndex, signsOfVector, yInversionFlag);
-        var rotatedNeighborsCount = noNeighborsCount(rotatedGridIndex);
-        scoreNotRotation *= 10 + noRotationNeighborsCount;
-        scoreRotated *= 10 + rotatedNeighborsCount;
 
-        if (scoreRotated < scoreNotRotation) {
-            rotateColorsInGrid(gridIndex, signsOfVector, colorsRotated);
+    function calculateCostForColors(initialColors, gridIndex) {
+        var k = 0.0;
+        k += colorCentroidStructure[initialColors.color1].normalizedSumSQ;
+        k += colorCentroidStructure[initialColors.color2].normalizedSumSQ;
+        k += colorCentroidStructure[initialColors.color3].normalizedSumSQ;
+        k += colorCentroidStructure[initialColors.color4].normalizedSumSQ;
+        var oC1 = calculateCostForOneColor(initialColors.color1, gridIndex);
+        var oC2 = calculateCostForOneColor(initialColors.color2, gridIndex);
+        var oC3 = calculateCostForOneColor(initialColors.color3, gridIndex);
+        var oC4 = calculateCostForOneColor(initialColors.color4, gridIndex);
+        return {K:k,P: (oC1 + oC2 + oC3 + oC4)};
+    }
+
+
+    function calculateScores(initialColors, gridIndex) {
+        var scoreForInitialColors = calculateCostForColors(initialColors, gridIndex);
+
+        rotateColorBlock(gridIndex, initialColors, 1);
+        var scoreForClockwise1Rotation = calculateCostForColors(initialColors, gridIndex + 1);
+
+        rotateColorBlock(gridIndex, initialColors, 2);
+        var scoreForClockwise2Rotation = calculateCostForColors(initialColors, gridIndex + 1 + gridSize);
+
+        rotateColorBlock(gridIndex, initialColors, 3);
+        var scoreForClockwise3Rotation = calculateCostForColors(initialColors, gridIndex + gridIndex);
+
+        rotateColorBlock(gridIndex, initialColors, 0);
+
+        return {
+            scoreForInitialColors: scoreForInitialColors,
+            scoreForClockwise1Rotation: scoreForClockwise1Rotation,
+            scoreForClockwise2Rotation: scoreForClockwise2Rotation,
+            scoreForClockwise3Rotation: scoreForClockwise3Rotation
+        };
+    }
+
+    function cellColorComparison(spotIndex, referenceCell) {
+        var result = 0
+        if (dataGrid[referenceCell] === dataGrid[spotIndex]) {
+            result = 1;
+        }
+        return result;
+    }
+
+    function testNeighbor(spotIndex, referenceCell) {
+        var result = 0;
+        if (spotIndex >= 0 && spotIndex < gridSize2) {
+            result = cellColorComparison(spotIndex, referenceCell);
+        }
+        return result;
+    }
+
+    // function calculateNeighbors(gridIndex) {
+    //     var neighborsSquare1 = {
+    //         initial: (testNeighbor(gridIndex - gridSize, gridIndex) + testNeighbor(gridIndex - 1, gridIndex)),
+    //         plusOne: (testNeighbor(gridIndex - gridSize + 1, gridIndex) + testNeighbor(gridIndex + 2, gridIndex)),
+    //         minusOne: (testNeighbor(gridIndex + 2 * gridSize, gridIndex) + testNeighbor(gridIndex + gridSize - 1, gridIndex))
+    //     }
+    //     var neighborsSquare2 = {
+    //         initial: (testNeighbor(gridIndex - gridSize + 1, gridIndex + 1) + testNeighbor(gridIndex + 1, gridIndex + 1)),
+    //         plusOne: (testNeighbor(gridIndex + gridSize + 1, gridIndex + 1) + testNeighbor(gridIndex + 2 * gridSize, gridIndex + 1)),
+    //         minusOne: (testNeighbor(gridIndex + 2 * gridSize, gridIndex + 1) + testNeighbor(gridIndex + gridSize - 1, gridIndex + 1))
+    //     }
+    //     var neighborsSquare3 = {
+    //         initial: (testNeighbor(gridIndex + gridSize + 2, gridIndex + gridSize + 1) +
+    //             testNeighbor(gridIndex + 2 * gridSize + 1, gridIndex + gridSize + 1)),
+    //         plusOne: (testNeighbor(gridIndex + 2 * gridSize, gridIndex + gridSize + 1) +
+    //             testNeighbor(gridIndex + gridSize - 1, gridIndex + gridSize + 1)),
+    //         minusOne: (testNeighbor(gridIndex - gridSize + 1, gridIndex + gridSize + 1) +
+    //             testNeighbor(gridIndex + 2, gridIndex + gridSize + 1))
+    //     }
+    //     var neighborsSquare4 = {
+    //         initial: (testNeighbor(gridIndex + gridSize - 1, gridIndex + gridSize) +
+    //             testNeighbor(gridIndex + 2 * gridSize, gridIndex + gridSize)),
+    //         plusOne: (testNeighbor(gridIndex - gridSize, gridIndex + gridSize) +
+    //             testNeighbor(gridIndex - 1, gridIndex + gridSize)),
+    //         minusOne: (testNeighbor(gridIndex + gridSize + 2, gridIndex + gridSize) +
+    //             testNeighbor(gridIndex + 2 * gridSize + 1, gridIndex + gridSize))
+    //     }
+    //     return {
+    //         // initial: neighborsSquare1.initial + neighborsSquare2.initial + neighborsSquare3.initial + neighborsSquare4.initial,
+    //         // plusOne: neighborsSquare1.plusOne + neighborsSquare2.plusOne + neighborsSquare3.plusOne + neighborsSquare4.plusOne,
+    //         // minusOne: neighborsSquare1.minusOne + neighborsSquare2.minusOne + neighborsSquare3.minusOne + neighborsSquare4.minusOne
+    //         n1: neighborsSquare1, n2: neighborsSquare2, n3: neighborsSquare3, n4: neighborsSquare4
+    //     }
+    // }
+
+    function calculateDifferencesAndRotate(gridIndex) {
+// assumes top left cell anchoring 0-2, skip 3 x 0-2, skip 3 centers
+        var change = 0;
+        var initialColors = getColors(gridIndex);
+        var __ret = calculateScores(initialColors, gridIndex);
+        // var scoreForInitialColors = __ret.scoreForInitialColors.K;
+        // var scoreForClockwise1Rotation = __ret.scoreForClockwise1Rotation.K;
+        // var scoreForClockwise2Rotation = __ret.scoreForClockwise2Rotation.K;
+        // var scoreForClockwise3Rotation = __ret.scoreForClockwise3Rotation.K;
+        var scoreForInitialColors = __ret.scoreForInitialColors.P;
+        var scoreForClockwise1Rotation = __ret.scoreForClockwise1Rotation.P;
+        var scoreForClockwise2Rotation = __ret.scoreForClockwise2Rotation.P;
+        var scoreForClockwise3Rotation = __ret.scoreForClockwise3Rotation.P;
+
+        //var __neighbors = calculateNeighbors(gridIndex);
+        if ((scoreForClockwise1Rotation < Math.min(scoreForInitialColors,
+            Math.min(scoreForClockwise2Rotation, scoreForClockwise3Rotation)))) {
+            rotateColorBlock(gridIndex, initialColors, 1);
+            change = 1;
+        }
+        if ((scoreForClockwise2Rotation < Math.min(scoreForInitialColors,
+            Math.min(scoreForClockwise1Rotation, scoreForClockwise3Rotation)))) {
+            rotateColorBlock(gridIndex, initialColors, 2);
+            change = 1;
+        }
+        if ((scoreForClockwise3Rotation < Math.min(scoreForInitialColors,
+            Math.min(scoreForClockwise1Rotation, scoreForClockwise2Rotation)))) {
+            rotateColorBlock(gridIndex, initialColors, 3);
+            change = 1;
+        }
+        // clean up after calculation
+        calculateCentroidPositions();
+        // if ((scoreForClockwiseRotation < Math.min(scoreForInitialColors, scoreForClockwiseRotation)) &&
+        //     (
+        //         __neighbors.n1.plusOne >= Math.min(1, __neighbors.n1.initial) ||
+        //         __neighbors.n2.plusOne >= Math.min(1, __neighbors.n2.initial) ||
+        //         __neighbors.n3.plusOne >= Math.min(1, __neighbors.n3.initial) ||
+        //         __neighbors.n4.plusOne >= Math.min(1, __neighbors.n4.initial)
+        //     )
+        // ) {
+        //     rotateColorBlock(gridIndex, initialColors, 1);
+        //     change = 1;
+        // }
+        // if ((scoreForCounterRotation < Math.min(scoreForInitialColors, scoreForClockwiseRotation)) &&
+        //     (
+        //         __neighbors.n1.minusOne >= Math.min(1, __neighbors.n1.initial) ||
+        //         __neighbors.n2.minusOne >= Math.min(1, __neighbors.n2.initial) ||
+        //         __neighbors.n3.minusOne >= Math.min(1, __neighbors.n3.initial) ||
+        //         __neighbors.n4.minusOne >= Math.min(1, __neighbors.n4.initial)
+        //     )
+        // ) {
+        //     rotateColorBlock(gridIndex, initialColors, -1);
+        //     change = 1;
+        // }
+        // if (change === 0) {
+        //     rotateColorBlock(gridIndex, initialColors, 0);
+        // }
+        if (change) {
+            changeFound += 1;
         }
     }
 
-    function signsOfVectorToCentroid(vector) {
-        var signs = {X: Math.sign(vector.X), Y: Math.sign(vector.Y)};
-        return signs;
-    }
-
-    function invertYRotationFlag(vector) {
-        var yinversion = (Math.abs(vector.X) > Math.abs(vector.Y));
-        if (Math.random() > 0.8) {
-            yinversion = -yinversion;
+    function processMovement(gridIndex) {
+        var location = index2XYValues(gridIndex);
+        // check for valid index
+        if (location.X < gridSize - 1 && location.Y < gridSize - 1) {
+            calculateDifferencesAndRotate(gridIndex);
         }
-        return yinversion;
-    }
-
-    function processRotation(gridIndex, centroidVector) {
-        var signsOfVector = signsOfVectorToCentroid(centroidVector);
-        var yInversionFlag = invertYRotationFlag(centroidVector);
-        evaluateRotation(gridIndex, centroidVector, signsOfVector, yInversionFlag)
     }
 
     function loopThroughDatagrid() {
+
         for (var gridIndex1 = 0; gridIndex1 < gridSize2; gridIndex1++) {
             var gridIndex = randGS(gridSize2);
-            if (noNeighborsCount(gridIndex) > randGS(4)) {
-                var colorAtIndex = dataGrid[gridIndex];
-                var centroidVector = fetchColorCentroidVector(gridIndex, colorAtIndex);
-                processRotation(gridIndex, centroidVector);
-
-            }
+            processMovement(gridIndex);
         }
-
     }
 
     loopThroughDatagrid();
