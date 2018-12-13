@@ -31,7 +31,12 @@ function GraphicSpace(GridSize, ColorSpace) {
         for (var b = 0; b < colorSpace; b++) {
             for (var g = 0; g < colorSpace; g++) {
                 for (var r = 0; r < colorSpace; r++) {
-                    colorZones.push(new ColorZone(scaleColor(r, colorSpace), scaleColor(g, colorSpace), scaleColor(b, colorSpace)));
+                    colorZones.push(
+                        new ColorZone(
+                            scaleColor(r, colorSpace),
+                            scaleColor(g, colorSpace),
+                            scaleColor(b, colorSpace))
+                    );
                 }
             }
         }
@@ -59,7 +64,8 @@ function GraphicSpace(GridSize, ColorSpace) {
      */
     fillDataGrid: function fillDataGrid(gridLength) {
         for (var i = 0; i < gridLength; i++) {
-            dataGrid[i] = randGS(colorZones.length);
+            //dataGrid[i] = randGS(colorZones.length);
+            dataGrid[i] = randGS(2);
             // dataGrid[i] = 1;
         }
         // dataGrid[gridSize+1]=2;
@@ -79,7 +85,7 @@ function GraphicSpace(GridSize, ColorSpace) {
         centroidPositions.push({X: x, Y: y});
     }
 
-      /**
+    /**
      * returns a random integer scaled to argument
      * @param scaleIt
      * @returns {number}
