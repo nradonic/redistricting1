@@ -20,10 +20,6 @@ var noiseLevel = 0;
 var forceRange = 10;
 var savedData = "";
 
-// dataGrid stores graphic data
-var dataGrid = new Array(gridSize2);
-var fftGrid = new Array(gridSize2);
-
 // reset grid related values
 function reconfigureGridRelatedStructures(dropdownSize, dropdownColor, dropdownRange) {
     gridSize = parseInt(dropdownSize.options[dropdownSize.selectedIndex].value);
@@ -70,13 +66,11 @@ function OnChange(param) {
 function smooth() {
     screenDrawCount++;
     drawDistricts();
-    // var graphicsDataGrid = districts.getDataGrid();
+
     changesFound = nextGen(districts);
     totalChanges += changesFound
 
     drawDistricts();
-    // graphicsDataGrid = districts.getDataGrid();
-    // a = 1;
 }
 
 var myLoopingVariable;

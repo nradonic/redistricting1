@@ -2,22 +2,28 @@
 
 function SaveData() {
     stop();
+    tempFileName = document.getElementById("canvasgamesfilename").value;
+    dataGrid = districts.getDataGrid();
     savedData = JSON.stringify({
+        fileName: tempFileName,
         gridSize: gridSize,
         gridSize2: gridSize2,
         screenDraw: screenDrawCount,
         ColorSpace: ColorSpace,
         screenDelay: screenDelay,
+        districts: districts,
         dataGrid: dataGrid
     });
     ButtonLabelToPlay();
 
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/Controller/Action");
+    xhr.open("POST", "savefile.php");
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
-            alert(xhr.responseText);
+            // alert(xhr.responseText);
+
+            document.getElementById("Show1").innerHTML = xhr.responseText;
         }
     }
     xhr.send(savedData);

@@ -105,6 +105,9 @@ function GraphicSpace(GridSize, ColorSpace) {
         return dataGrid;
     }
 
+    this.setDataGrid = function (dataGridIn){
+        dataGrid = dataGridIn;
+    }
 
 // draw data
     this.drawData = function (changesFound, totalChanges) {
