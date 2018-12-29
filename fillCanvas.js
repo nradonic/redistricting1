@@ -21,10 +21,9 @@ var forceRange = 10;
 var savedData = "";
 
 // reset grid related values
-function reconfigureGridRelatedStructures(dropdownSize, dropdownColor, dropdownRange) {
+function reconfigureGridRelatedStructures(dropdownSize, dropdownColor){
     gridSize = parseInt(dropdownSize.options[dropdownSize.selectedIndex].value);
     gridSize2 = gridSize * gridSize;
-    fftGrid = new Array(gridSize2);
 
     ColorSpace = parseInt(dropdownColor.options[dropdownColor.selectedIndex].value);
     ColorScale = Math.floor(255 / (ColorSpace - 1));
@@ -53,9 +52,9 @@ function drawDistricts() {
 function OnChange(param) {
     var dropdownSize = document.getElementById("select1");
     var dropdownColor = document.getElementById("select2");
-    var dropdownRange = document.getElementById("select4");
+    // var dropdownRange = document.getElementById("select4");
 
-    reconfigureGridRelatedStructures(dropdownSize, dropdownColor, dropdownRange);
+    reconfigureGridRelatedStructures(dropdownSize, dropdownColor);
     drawDistricts();
     serviceFlag = true;
 }
