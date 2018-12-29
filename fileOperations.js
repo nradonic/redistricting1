@@ -31,13 +31,30 @@ function SaveData() {
 
 function LoadData() {
     stop();
-    var b = JSON.parse(savedData);
-    gridSize = b.gridSize;
-    gridSize2 = b.gridSize2;
-    screenDrawCount = b.screenDraw;
-    screenDelay = b.screenDelay;
-    ColorSpace = b.ColorSpace;
-    dataGrid = b.dataGrid;
-    drawCanvas1();
-    ButtonLabelToPlay();
+
+    tempFileName = document.getElementById("canvasgamesfilename").value;
+
+  //  ButtonLabelToPlay();
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "loadfile.php");
+    xhr.setRequestHeader('Content-Type', 'application/text');
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            // alert(xhr.responseText);
+
+            document.getElementById("Show2").innerHTML = xhr.responseText;
+            savedData = xhr.responseText;
+
+            var b = JSON.parse(savedData);
+            gridSize = b.gridSize;
+            gridSize2 = b.gridSize2;
+            screenDrawCount = b.screenDraw;
+            screenDelay = b.screenDelay;
+            ColorSpace = b.ColorSpace;
+            districts.setDataGrid(b.dataGrid);
+            drawDistricts();
+        }
+    }
+    xhr.send(tempFileName);
 }
