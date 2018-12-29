@@ -1,0 +1,1 @@
+{"fileName":"ab","gridSize":4,"gridSize2":16,"screenDraw":0,"ColorSpace":2,"screenDelay":1000,"districts":{"gridSize":4,"colorSpace":2},"dataGrid":[1,1,1,0,1,1,0,0,1,0,0,1,0,0,1,0]}

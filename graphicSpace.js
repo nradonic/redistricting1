@@ -114,7 +114,7 @@ function GraphicSpace(GridSize, ColorSpace) {
         document.getElementById("screenDrawCount").innerHTML = screenDrawCount.toFixed(0);
         document.getElementById("changes").innerHTML = changesFound.toFixed(0);
         document.getElementById("totalChanges").innerHTML = totalChanges.toFixed(0);
-        document.getElementById("noiseLevel").innerHTML = noiseLevel.toFixed(0);
+
     }
 
     var drawCentroids = function (ctx, squareSide) {

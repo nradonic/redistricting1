@@ -85,23 +85,30 @@
 		</canvas>
 	</div>
 
-	<div>
-		<p>Changes: <span id="changes" style="border:green 1px solid"></span> Total Changes: <span id="totalChanges"  style="border:green 1px solid"></span> Noise Level: <span id="noiseLevel"></span>
+	<div style="border:green 1px solid">
+		<p>Changes: <span id="changes" style="border:green 1px solid"></span> Total Changes: <span id="totalChanges"  style="border:green 1px solid"></span>
 		</p>
-        <p>Response: <span id="Show1" style="border:green 1px solid"></span></p>
+        <p>Response 1: <span id="Show1" style="border:green 1px solid"></span></p>
+        <p>Response 2: <span id="Show2" style="border:green 1px solid"></span></p>
 	</div>
 
 	<div>
 
-		<p>File Name: <input id="canvasgamesfilename"  placeholder="File Name">  &nbsp;&nbsp;&nbsp;&nbsp; <button  id="SaveData" onclick='SaveData();'>Save Data</button></p>
-		<p>Load Data&nbsp;&nbsp; <select id="LoadData" onchange='index.html();'    >
+		<p>File Name: <input id="canvasgamesfilename"  placeholder="File Name">
+            &nbsp;&nbsp;&nbsp;&nbsp; <button  id="SaveData" onclick='SaveData();'>Save Data</button>
+            &nbsp;&nbsp;&nbsp;&nbsp; <button  id="LoadData" onclick='LoadData();'>Load Data</button>
+		</p>
+        <p>Load Data&nbsp;&nbsp; <select id="" onchange='index.html();'    >
 		<option>4</option>
 		<option>5</option>
 		</select>
 		</p>
 	</div>
 
-<?php include("description.php"); ?>
+<?php
+    include("description.php");
+
+    ?>
 
 
 
