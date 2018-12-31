@@ -2,7 +2,7 @@ function GraphicSpace(GridSize, ColorSpace) {
 
     this.gridSize = GridSize;
     this.colorSpace = ColorSpace;
-
+    var forceArray = [];
 
     var COLORSCALE = 255;
 
@@ -72,8 +72,15 @@ function GraphicSpace(GridSize, ColorSpace) {
         // dataGrid[gridSize2 - gridSize -2]=2;
     }
 
-    fillDataGrid(gridSize2)
+    function fillForces(gridLength) {
+        for (i = 0; i < gridLength; i++) {
+            var q = {X: 0, Y: 0};
+            forceArray.push(q);
+        }
+    }
 
+    fillDataGrid(gridSize2);
+    fillForces(gridSize2);
 
     //this.centroidPositions = []
     var centroidPositions = [];
@@ -81,8 +88,8 @@ function GraphicSpace(GridSize, ColorSpace) {
     this.clearCentroidPositions = function () {
         centroidPositions = [];
     }
-    this.pushCentroidPositions = function (x, y) {
-        centroidPositions.push({X: x, Y: y});
+    this.pushCentroidPositions = function (x, y, count) {
+        centroidPositions.push({X: x, Y: y, Count: count});
     }
 
     /**
@@ -105,8 +112,12 @@ function GraphicSpace(GridSize, ColorSpace) {
         return dataGrid;
     }
 
-    this.setDataGrid = function (dataGridIn){
+    this.setDataGrid = function (dataGridIn) {
         dataGrid = dataGridIn;
+    }
+
+    this.setForceVectors = function (x, y, fx, fy) {
+        forceArray[x + y * gridSize] = {X: fx, Y: fy};
     }
 
 // draw data
@@ -119,10 +130,13 @@ function GraphicSpace(GridSize, ColorSpace) {
 
     var drawCentroids = function (ctx, squareSide) {
         for (var i = 0; i < centroidPositions.length; i++) {
+            if (centroidPositions[i].Count === 0) {
+                continue;
+            }
             var cp = centroidPositions[i];
             cp.X = (cp.X) * squareSide;
             cp.Y = (cp.Y) * squareSide;
-            var t = 'rgba(' + 0 + ',' + 0 + ',' + 0 + ',255)';
+            var t = 'rgba(' + 200 + ',' + 200 + ',' + 200 + ',255)';
             if (i === 0) {  // black color complement....
                 t = 'rgba(' + 255 + ',' + 255 + ',' + 255 + ',255)';
             }
@@ -136,14 +150,48 @@ function GraphicSpace(GridSize, ColorSpace) {
         }
     }
 
+    function drawForce(ctx, i, x, y, squareSide, normalizeForce) {
+        var t = 'rgba(' + 255 + ',' + 255 + ',' + 255 + ',255)';
+        ctx.beginPath();
+        ctx.strokeStyle = t;
+        ctx.moveTo(x + squareSide / 2, y + squareSide / 2);
+        q = normalizeForce;
+        if (q === 0) {
+            q = 1;
+        }
+        deltaX = forceArray[i].X * squareSide / q;
+        deltaY = forceArray[i].Y * squareSide / q;
+        ctx.lineTo(x + squareSide / 2 + deltaX, y + squareSide / 2 + deltaY);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(x + squareSide / 2, y + squareSide / 2,
+            2, 0, 2 * Math.PI, false);
+        ctx.fillStyle = 'green';
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#003300';
+        ctx.stroke();
+
+    }
+
+    function maxForce() {
+        maxF = 0.0;
+        for (i = 0; i < gridSize2; i++) {
+            maxF = Math.max(forceArray[i].X * forceArray[i].X +
+                forceArray[i].Y * forceArray[i].Y, maxF);
+        }
+        return Math.sqrt(maxF);
+    }
 
 // draw raw graphics pattern
     this.drawCanvas1 = function () {
         var c = document.getElementById("drawHere");
         var ctx = c.getContext("2d");
         var myScreen = 800;
-        ctx.beginPath();
+
         var squareSide = myScreen / gridSize;
+        var normalizeForce = maxForce();
         for (var i = 0; i < gridSize2; i++) {
             var squareRow = Math.floor(i / gridSize);
             var squareCol = Math.floor(i % gridSize);
@@ -152,11 +200,15 @@ function GraphicSpace(GridSize, ColorSpace) {
             var x = squareCol * squareSide;
 
             var t = 'rgba(' + colorZones[dataGrid[i]].red + ',' + colorZones[dataGrid[i]].green + ',' + colorZones[dataGrid[i]].blue + ',255)';
+            ctx.beginPath();
             ctx.fillStyle = t;
             ctx.fillRect(x, y, squareSide, squareSide);
+            ctx.stroke();
+            drawForce(ctx, i, x, y, squareSide, normalizeForce);
+
         }
         drawCentroids(ctx, squareSide);
-        ctx.stroke();
+        // ctx.stroke();
     }
 
     return this;

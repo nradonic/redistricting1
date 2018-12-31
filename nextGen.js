@@ -9,6 +9,25 @@ function nextGen(graphicData) {
 
     this.colorSpace = graphicData.colorSpace;
 
+    function makeArray(d1, d2) {
+        var arr = new Array(d1), i, l;
+        for (i = 0, l = d2; i < l; i++) {
+            arr[i] = new Array(d1);
+        }
+        return arr;
+    }
+
+    function clearForcesArray(arr) {
+        d1 = arr.length;
+        d2 = arr[0].length;
+        for (i = 0; i < d1; i++) {
+            for (j = 0; j < d2; j++) {
+                arr[i][j] = {X: 0.0, Y: 0.0};
+            }
+        }
+        return arr
+    }
+
     function XY(X, Y, count, SumSQ, normalizedSumSQ) {
         this.X = X;
         this.Y = Y;
@@ -92,7 +111,8 @@ function nextGen(graphicData) {
         graphicData.clearCentroidPositions();
         for (var i = 0; i < colorCentroidStructure.length; i++) {
             // write centroid positions {x,y} to graphicSpace object
-            graphicData.pushCentroidPositions(colorCentroidStructure[i].X, colorCentroidStructure[i].Y);
+            graphicData.pushCentroidPositions(colorCentroidStructure[i].X, colorCentroidStructure[i].Y,
+                colorCentroidStructure.Count);
         }
     }
 
@@ -143,6 +163,7 @@ function nextGen(graphicData) {
         calculateCentroidPositions();
         pushCentroidsToGraphicDataObject();
     }
+
     //
     // updateCentroidPositions();
 
@@ -245,7 +266,7 @@ function nextGen(graphicData) {
         var oC2 = calculateCostForOneColor(initialColors.color2, gridIndex);
         var oC3 = calculateCostForOneColor(initialColors.color3, gridIndex);
         var oC4 = calculateCostForOneColor(initialColors.color4, gridIndex);
-        return {K:k,P: (oC1 + oC2 + oC3 + oC4)};
+        return {K: k, P: (oC1 + oC2 + oC3 + oC4)};
     }
 
 
@@ -393,12 +414,65 @@ function nextGen(graphicData) {
     }
 
     /**
+     * force is weaker with distance - vector remains as per differences...normalize if repulsive force, nozero distance
+     * @param diffX
+     * @param diffY
+     */
+    function forceScale(diffX, diffY, count, colorsMatchFlag) {
+        sqdist = diffX * diffX + diffY * diffY;
+
+        forceX = count * diffX;
+        forceY = count * diffY;
+        if (colorsMatchFlag) {
+            return {forceX: forceX, forceY: forceY};
+        }
+        if (sqdist === 0) {
+            return {forceX: 0, forceY: 0};
+        }
+        forceX = -forceX * gridSize / sqdist / 2;
+        forceY = -forceY * gridSize / sqdist / 2;
+        return {forceX: forceX, forceY: forceY};
+    }
+
+    function sumForces(arr) {
+        for (var i = 0; i < gridSize2; i++) {
+            var q = index2XYValues(i);
+            var x = q.X;
+            var y = q.Y;
+            var localColor = dataGrid[i];
+            // j = 0;
+            for (j = 0; j < colorZones.length; j++) {
+                diffX = colorCentroidStructure[j].X - x;
+                diffY = colorCentroidStructure[j].Y - y;
+
+                q = forceScale(diffX, diffY, colorCentroidStructure[j].Count, (localColor === j));
+
+                arr[x][y].X += q.forceX;
+                arr[x][y].Y += q.forceY;
+            }
+            graphicData.setForceVectors(x, y, arr[x][y].X, arr[x][y].Y);
+        }
+        return arr;
+    }
+
+    function calculateCentroidForces() {
+        centroidForcesArray = makeArray(gridSize, gridSize);
+        clearedForcesArray = clearForcesArray(centroidForcesArray);
+        forcesArray = sumForces(clearedForcesArray);
+        // graphicData.setForceVectors(forcesArray);
+        a = 1;
+    }
+
+
+    /**
      * loop through all cells - looking at whatever algorithm works to lump together like cells
      */
     function loopThroughDatagrid() {
+        calculateCentroidPositions();
+        centroidForces = calculateCentroidForces();
+
         for (var gridIndex1 = 0; gridIndex1 < gridSize2; gridIndex1++) {
-            var gridIndex = randGS(3)-1;
-            processMovement(gridIndex1);
+
         }
 
     }
