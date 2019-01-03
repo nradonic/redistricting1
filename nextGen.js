@@ -447,8 +447,8 @@ function nextGen(graphicData, filterColorLayer) {
      * @param layerNumber
      * @returns {boolean|*}
      */
-    function sumForForces(filterColorLayer, layerNumber){
-        k = filterColorLayer === "All" || parseInt(filterColorLayer) === j ;
+    function sumForForces(filterColorLayer, layerNumber) {
+        k = filterColorLayer === "All" || parseInt(filterColorLayer) === j;
         return k;
     }
 
@@ -458,7 +458,7 @@ function nextGen(graphicData, filterColorLayer) {
      * @param localColor
      * @returns {boolean}
      */
-    function colorsMatch(layerColor, localColor){
+    function colorsMatch(layerColor, localColor) {
         return layerColor === localColor;
     }
 
@@ -483,19 +483,35 @@ function nextGen(graphicData, filterColorLayer) {
                 arr[x][y].X += q.forceX;
                 arr[x][y].Y += q.forceY;
             }
-            graphicData.setForceVectors(x, y, arr[x][y].X, arr[x][y].Y);
         }
         return arr;
     }
 
+    /**
+     * allows for later updates separate from calculations
+     * @param forcesArray
+     */
+    function setForcesArrayInGraphicData(forcesArray) {
+        for (var i = 0; i < gridSize2; i++) {
+            var q = index2XYValues(i);
+            var x = q.X;
+            var y = q.Y;
+            graphicData.setForceVectors(x, y, forcesArray[x][y].X, forcesArray[x][y].Y);
+        }
+    }
+
+    /**
+     * pipeline of operations
+     *
+     */
     function calculateCentroidForces() {
         centroidForcesArray = makeArray(gridSize, gridSize);
         clearedForcesArray = clearForcesArray(centroidForcesArray);
         forcesArray = sumForces(clearedForcesArray);
+        setForcesArrayInGraphicData(forcesArray);
         // graphicData.setForceVectors(forcesArray);
         a = 1;
     }
-
 
     /**
      * loop through all cells - looking at whatever algorithm works to lump together like cells
@@ -505,9 +521,7 @@ function nextGen(graphicData, filterColorLayer) {
         centroidForces = calculateCentroidForces();
 
         for (var gridIndex1 = 0; gridIndex1 < gridSize2; gridIndex1++) {
-
         }
-
     }
 
     loopThroughDatagrid();
