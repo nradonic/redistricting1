@@ -1,4 +1,5 @@
-function nextGen(graphicData) {
+function nextGen(graphicData, filterColorLayer) {
+    this.filterColorLayer = filterColorLayer;
     this.gridSize = graphicData.getGridSize();
     var gridSize2 = gridSize * gridSize;
     var changeFound = 0;
@@ -418,34 +419,66 @@ function nextGen(graphicData) {
      * @param diffX
      * @param diffY
      */
-    function forceScale(diffX, diffY, count, colorsMatchFlag) {
+    function forceScale(diffX, diffY, count, sumThisLayer, colorsMatchFlag) {
         sqdist = diffX * diffX + diffY * diffY;
 
+        if (sumThisLayer === false) {
+            return {forceX: 0, forceY: 0};
+        }
         forceX = count * diffX;
         forceY = count * diffY;
+        // attractive force
         if (colorsMatchFlag) {
             return {forceX: forceX, forceY: forceY};
         }
+        // divide by zero case
         if (sqdist === 0) {
             return {forceX: 0, forceY: 0};
         }
+        // repulsive case
         forceX = -forceX * gridSize / sqdist / 2;
         forceY = -forceY * gridSize / sqdist / 2;
         return {forceX: forceX, forceY: forceY};
     }
 
+    /**
+     * allow filtering of color layer for summing single forces...
+     * @param filterColorLayer
+     * @param layerNumber
+     * @returns {boolean|*}
+     */
+    function sumForForces(filterColorLayer, layerNumber){
+        k = filterColorLayer === "All" || parseInt(filterColorLayer) === j ;
+        return k;
+    }
+
+    /**
+     * matched colors are attractive, different colors repel....
+     * @param layerColor
+     * @param localColor
+     * @returns {boolean}
+     */
+    function colorsMatch(layerColor, localColor){
+        return layerColor === localColor;
+    }
+
+    /**
+     * add up forces on each grid point and store into data structure for vector sum display
+     * @param arr
+     * @returns {*}
+     */
     function sumForces(arr) {
         for (var i = 0; i < gridSize2; i++) {
             var q = index2XYValues(i);
             var x = q.X;
             var y = q.Y;
             var localColor = dataGrid[i];
-            // j = 0;
             for (j = 0; j < colorZones.length; j++) {
                 diffX = colorCentroidStructure[j].X - x;
                 diffY = colorCentroidStructure[j].Y - y;
 
-                q = forceScale(diffX, diffY, colorCentroidStructure[j].Count, (localColor === j));
+                q = forceScale(diffX, diffY, colorCentroidStructure[j].Count,
+                    sumForForces(filterColorLayer, j), colorsMatch(j, localColor));
 
                 arr[x][y].X += q.forceX;
                 arr[x][y].Y += q.forceY;

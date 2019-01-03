@@ -98,9 +98,24 @@
             &nbsp;&nbsp;&nbsp;&nbsp; <button  id="SaveData" onclick='SaveData();'>Save Data</button>
             &nbsp;&nbsp;&nbsp;&nbsp; <button  id="LoadData" onclick='LoadData();'>Load Data</button>
 		</p>
-        <p>Load Data&nbsp;&nbsp; <select id="" onchange='index.html();'    >
-		<option>4</option>
-		<option>5</option>
+        <p>View Layer&nbsp;&nbsp; <select id=select4 onchange='forceLayer();' >
+                <option selected>All</option>
+                <option>0</option>
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+                <option>6</option>
+                <option>7</option>
+                <option>8</option>
+                <option>9</option>
+                <option>10</option>
+                <option>11</option>
+                <option>12</option>
+                <option>13</option>
+                <option>14</option>
+                <option>15</option>
 		</select>
 		</p>
 	</div>

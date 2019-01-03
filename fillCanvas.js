@@ -21,7 +21,7 @@ var forceRange = 10;
 var savedData = "";
 
 // reset grid related values
-function reconfigureGridRelatedStructures(dropdownSize, dropdownColor){
+function reconfigureGridRelatedStructures(dropdownSize, dropdownColor) {
     gridSize = parseInt(dropdownSize.options[dropdownSize.selectedIndex].value);
     gridSize2 = gridSize * gridSize;
 
@@ -34,7 +34,9 @@ function reconfigureGridRelatedStructures(dropdownSize, dropdownColor){
     districts = new GraphicSpace(gridSize, ColorSpace);
     screenDrawCount = 0;
 }
+
 var changesFound = 0;
+
 /**
  *
  */
@@ -43,6 +45,7 @@ function drawDistricts() {
     districts.drawCanvas1();
 }
 
+var filterColorLayer = "All";
 
 /**
  * handle html button presses
@@ -52,11 +55,16 @@ function drawDistricts() {
 function OnChange(param) {
     var dropdownSize = document.getElementById("select1");
     var dropdownColor = document.getElementById("select2");
+
     // var dropdownRange = document.getElementById("select4");
 
     reconfigureGridRelatedStructures(dropdownSize, dropdownColor);
     drawDistricts();
     serviceFlag = true;
+}
+
+function forceLayer(){
+    filterColorLayer = document.getElementById("select4").value;
 }
 
 /**
@@ -66,7 +74,7 @@ function smooth() {
     screenDrawCount++;
     drawDistricts();
 
-    changesFound = nextGen(districts);
+    changesFound = nextGen(districts, filterColorLayer);
     totalChanges += changesFound
 
     drawDistricts();
