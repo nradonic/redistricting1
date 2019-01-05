@@ -64,12 +64,8 @@ function GraphicSpace(GridSize, ColorSpace) {
      */
     fillDataGrid: function fillDataGrid(gridLength) {
         for (var i = 0; i < gridLength; i++) {
-            //dataGrid[i] = randGS(colorZones.length);
             dataGrid[i] = randGS(2);
-            // dataGrid[i] = 1;
         }
-        // dataGrid[gridSize+1]=2;
-        // dataGrid[gridSize2 - gridSize -2]=2;
     }
 
     function fillForces(gridLength) {
@@ -82,7 +78,6 @@ function GraphicSpace(GridSize, ColorSpace) {
     fillDataGrid(gridSize2);
     fillForces(gridSize2);
 
-    //this.centroidPositions = []
     var centroidPositions = [];
 
     this.clearCentroidPositions = function () {
@@ -116,8 +111,12 @@ function GraphicSpace(GridSize, ColorSpace) {
         dataGrid = dataGridIn;
     }
 
-    this.setForceVectors = function (x, y, fx, fy) {
+    this.setForceVector = function (x, y, fx, fy) {
         forceArray[x + y * gridSize] = {X: fx, Y: fy};
+    }
+
+    this.setForceVectors = function (fv) {
+        forceArray = fv;
     }
 
     this.getForceVectors = function (){

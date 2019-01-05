@@ -89,7 +89,6 @@
 		<p>Changes: <span id="changes" style="border:green 1px solid"></span> Total Changes: <span id="totalChanges"  style="border:green 1px solid"></span>
 		</p>
         <p>Response 1: <span id="Show1" style="border:green 1px solid"></span></p>
-        <p>Response 2: <span id="Show2" style="border:green 1px solid"></span></p>
 	</div>
 
 	<div>
@@ -119,6 +118,9 @@
 		</select>
 		</p>
 	</div>
+    <div style="border:green 1px solid">
+        <p>Response 2: <span id="Show2" style="border:green 1px solid"></span></p>
+    </div>
 
 <?php
     include("description.php");

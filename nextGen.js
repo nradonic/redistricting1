@@ -491,12 +491,12 @@ function nextGen(graphicData, filterColorLayer) {
      * allows for later updates separate from calculations
      * @param forcesArray
      */
-    function setForcesArrayInGraphicData(forcesArray) {
+    function setForcesArrayInGraphicData(forcesArray2D) {
         for (var i = 0; i < gridSize2; i++) {
             var q = index2XYValues(i);
             var x = q.X;
             var y = q.Y;
-            graphicData.setForceVectors(x, y, forcesArray[x][y].X, forcesArray[x][y].Y);
+            graphicData.setForceVector(x, y, forcesArray2D[x][y].X, forcesArray2D[x][y].Y);
         }
     }
 
@@ -507,8 +507,8 @@ function nextGen(graphicData, filterColorLayer) {
     function calculateCentroidForces() {
         centroidForcesArray = makeArray(gridSize, gridSize);
         clearedForcesArray = clearForcesArray(centroidForcesArray);
-        forcesArray = sumForces(clearedForcesArray);
-        setForcesArrayInGraphicData(forcesArray);
+        forcesArray2D = sumForces(clearedForcesArray);
+        setForcesArrayInGraphicData(forcesArray2D);
 
         // graphicData.setForceVectors(forcesArray);
         a = 1;
