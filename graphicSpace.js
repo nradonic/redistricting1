@@ -120,6 +120,10 @@ function GraphicSpace(GridSize, ColorSpace) {
         forceArray[x + y * gridSize] = {X: fx, Y: fy};
     }
 
+    this.getForceVectors = function (){
+        return forceArray;
+    }
+
 // draw data
     this.drawData = function (changesFound, totalChanges) {
         document.getElementById("screenDrawCount").innerHTML = screenDrawCount.toFixed(0);

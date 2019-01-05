@@ -509,6 +509,7 @@ function nextGen(graphicData, filterColorLayer) {
         clearedForcesArray = clearForcesArray(centroidForcesArray);
         forcesArray = sumForces(clearedForcesArray);
         setForcesArrayInGraphicData(forcesArray);
+
         // graphicData.setForceVectors(forcesArray);
         a = 1;
     }

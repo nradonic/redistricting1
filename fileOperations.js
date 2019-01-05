@@ -4,6 +4,7 @@ function SaveData() {
     stop();
     tempFileName = document.getElementById("canvasgamesfilename").value;
     dataGrid = districts.getDataGrid();
+    forcesArray = districts.getForceVectors();
     savedData = JSON.stringify({
         fileName: tempFileName,
         gridSize: gridSize,
@@ -15,7 +16,8 @@ function SaveData() {
         screenDelay: screenDelay,
         delayIndex: document.getElementById("select3").selectedIndex,
         districts: districts,
-        dataGrid: dataGrid
+        dataGrid: dataGrid,
+        forcesArray: forcesArray
     });
     ButtonLabelToPlay();
 
@@ -60,6 +62,7 @@ function LoadData() {
             document.getElementById("select2").selectedIndex = b.gridColorSpaceIndex;
             reconfigureGridRelatedStructures(document.getElementById("select1"), document.getElementById("select2"));
             districts.setDataGrid(b.dataGrid);
+            districts.setForceVectors(b.forcesArray);
             drawDistricts();
         }
     }
