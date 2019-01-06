@@ -66,8 +66,8 @@ print('Screen draw: ' . $total->screenDraw . $break);
 print('Color space: ' . $total->ColorSpace . $break);
 print('Delay (ms) : ' . $total->screenDelay . $break);
 
-print('Data Grid  : ' . printX($total->dataGrid) . $break);
-print('Forces     : ' . printXY($total->forcesArray) . $break);
+//print('Data Grid  : ' . printX($total->dataGrid) . $break);
+//print('Forces     : ' . printXY($total->forcesArray) . $break);
 
 if(strlen($fileName) >= 5){
     $myfile = fopen("./data937/" . $fileName, "w");

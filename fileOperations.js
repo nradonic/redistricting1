@@ -28,7 +28,11 @@ function SaveData() {
         if (xhr.readyState == 4 && xhr.status == 200) {
             // alert(xhr.responseText);
 
-            document.getElementById("Show1").innerHTML = xhr.responseText;
+            //document.getElementById("Show1").innerHTML = xhr.responseText;
+            document.getElementById("Show1").innerHTML = "<br/>Colors:<br/>" +
+                datagridAsColorValues(districts.getDataGrid(), gridSize, gridSize2) +
+                "<br/>Forces:<br/>" +
+                forcesAsTextArray(b.forcesArray, gridSize, gridSize2);
         }
     }
     xhr.send(savedData);
@@ -47,11 +51,10 @@ function LoadData() {
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
             // alert(xhr.responseText);
-
-            document.getElementById("Show2").innerHTML = xhr.responseText;
             savedData = xhr.responseText;
 
             var b = JSON.parse(savedData);
+
             gridSize = b.gridSize;
             document.getElementById("select1").selectedIndex = b.gridIndex;
             gridSize2 = b.gridSize2;
@@ -64,7 +67,16 @@ function LoadData() {
             districts.setDataGrid(b.dataGrid);
             districts.setForceVectors(b.forcesArray);
             drawDistricts();
+            document.getElementById("Show1").innerHTML = "<br/>Colors:<br/>" +
+                datagridAsColorValues(districts.getDataGrid(), gridSize, gridSize2) +
+                "<br/>Forces:<br/>" +
+                forcesAsTextArray(b.forcesArray, gridSize, gridSize2);
+            //document.getElementById("Show2").innerHTML = xhr.responseText;
+            document.getElementById("Show2").innerHTML = "<br/>Filename: " + tempFileName +
+                ",  gridSize: " + gridSize + ",  gridSize2: " + gridSize2 + ",  ScreenDraw: " + screenDrawCount +
+                ",  Color Space: " + ColorSpace + ",  Screen Delay: " + screenDelay;
         }
     }
     xhr.send(tempFileName);
+
 }

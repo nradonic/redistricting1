@@ -131,7 +131,9 @@
 
 <br>
 </body>
+<script type="text/JavaScript" src="utilities.js"> </script>
 <script type="text/JavaScript" src="graphicSpace.js"> </script>
+<script type="text/JavaScript" src="pressure.js"> </script>
 <script type="text/JavaScript" src="nextGen.js"> </script>
 <script type="text/JavaScript" src="fileOperations.js"> </script>
 <script type="text/JavaScript" src="fillCanvas.js"> </script>

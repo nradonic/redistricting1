@@ -67,21 +67,21 @@ function nextGen(graphicData, filterColorLayer) {
      * @param gridIndex
      * @returns {{X: number, Y: number}}
      */
-    function index2XYValues(gridIndex) {
-        if (gridIndex < 0 || gridIndex > gridSize2) {
-            return {X: 0, Y: 0};
-        }
-        var x = Math.floor(gridIndex % gridSize);
-        var y = Math.floor(gridIndex / gridSize);
-        return {X: x, Y: y};
-    }
+    // function index2XYValues(gridIndex) {
+    //     if (gridIndex < 0 || gridIndex > gridSize2) {
+    //         return {X: 0, Y: 0};
+    //     }
+    //     var x = Math.floor(gridIndex % gridSize);
+    //     var y = Math.floor(gridIndex / gridSize);
+    //     return {X: x, Y: y};
+    // }
 
     /**
      * Add up x and y positions and calculate a total X,Y -- by color
      */
     function addupXYPositions() {
         for (var i = 0; i < gridSize2; i++) {
-            var q = index2XYValues(i);
+            var q = index2XYValues(i, gridSize, gridSize2);
             var x = q.X;
             var y = q.Y;
             var localColor = dataGrid[i];
@@ -135,7 +135,7 @@ function nextGen(graphicData, filterColorLayer) {
      */
     function sumOfSquares() {
         for (var gridIndex = 0; gridIndex < gridSize2; gridIndex++) {
-            var location = index2XYValues(gridIndex);
+            var location = index2XYValues(gridIndex, gridSize, gridSize2);
             var color = dataGrid[gridIndex];
             colorCentroidStructure[color].SumSQ += (location.X - colorCentroidStructure[color].X) *
                 (location.X - colorCentroidStructure[color].X) +
@@ -173,7 +173,7 @@ function nextGen(graphicData, filterColorLayer) {
         if (arguments.length == 2) {
             colorAtIndex = colorAtIndexIn;
         }
-        var xYPosition = index2XYValues(gridIndex);
+        var xYPosition = index2XYValues(gridIndex, gridSize, gridSize2);
         var locationOfCentroidX = colorCentroidStructure[colorAtIndex].X - xYPosition.X;
         var locationOfCentroidY = colorCentroidStructure[colorAtIndex].Y - xYPosition.Y;
         return {X: locationOfCentroidX, Y: locationOfCentroidY}
@@ -183,7 +183,7 @@ function nextGen(graphicData, filterColorLayer) {
         var distance = 0;
         if (cellIndex >= 0 && cellIndex < gridSize2) {
             var centroidVector = fetchColorCentroidVector(cellIndex);
-            var currentCellXY = index2XYValues(cellIndex);
+            var currentCellXY = index2XYValues(cellIndex, gridSize, gridSize2);
             distance = Math.sqrt((centroidVector.X - currentCellXY.X) * (centroidVector.X - currentCellXY.X) +
                 (centroidVector.Y - currentCellXY.Y) * (centroidVector.Y - currentCellXY.Y));
         }
@@ -246,7 +246,7 @@ function nextGen(graphicData, filterColorLayer) {
         var sumdist2 = 0.0;
         for (var element = 0; element < colorZones.length; element++) {
             if (color1 !== element) {
-                var xy = index2XYValues(gridIndex);
+                var xy = index2XYValues(gridIndex, gridSize, gridSize2);
                 distX = gridSize - Math.abs(colorCentroidStructure[element].X - xy.X);
                 distY = gridSize - Math.abs(colorCentroidStructure[element].Y - xy.Y);
                 distZ = (distX * distX + distY * distY) / (colorZones.length - 1);
@@ -407,7 +407,7 @@ function nextGen(graphicData, filterColorLayer) {
     }
 
     function processMovement(gridIndex) {
-        var location = index2XYValues(gridIndex);
+        var location = index2XYValues(gridIndex, gridSize, gridSize2);
         // check for valid index
         if (location.X < gridSize - 1 && location.Y < gridSize - 1) {
             calculateDifferencesAndRotate(gridIndex);
@@ -469,7 +469,7 @@ function nextGen(graphicData, filterColorLayer) {
      */
     function sumForces(arr) {
         for (var i = 0; i < gridSize2; i++) {
-            var q = index2XYValues(i);
+            var q = index2XYValues(i, gridSize, gridSize2);
             var x = q.X;
             var y = q.Y;
             var localColor = dataGrid[i];
@@ -493,7 +493,7 @@ function nextGen(graphicData, filterColorLayer) {
      */
     function setForcesArrayInGraphicData(forcesArray2D) {
         for (var i = 0; i < gridSize2; i++) {
-            var q = index2XYValues(i);
+            var q = index2XYValues(i, gridSize, gridSize2);
             var x = q.X;
             var y = q.Y;
             graphicData.setForceVector(x, y, forcesArray2D[x][y].X, forcesArray2D[x][y].Y);
